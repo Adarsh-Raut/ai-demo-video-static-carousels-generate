@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Lumen — Notes that think with you</title>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: Inter, -apple-system, system-ui, sans-serif; color: #15131f; background: #fbfaff; }
+  nav { display: flex; align-items: center; justify-content: space-between; padding: 22px 64px; }
+  .logo { font-weight: 800; font-size: 22px; letter-spacing: -0.02em; }
+  .logo b { color: #6d5efc; }
+  nav a { margin-left: 28px; color: #4b4760; text-decoration: none; font-size: 15px; }
+  .hero { text-align: center; padding: 90px 20px 60px; }
+  .hero h1 { font-size: 64px; letter-spacing: -0.04em; line-height: 1.05; }
+  .hero p { margin: 20px auto 34px; max-width: 560px; font-size: 19px; color: #5b5770; }
+  .signup { display: inline-flex; gap: 10px; }
+  .signup input { width: 300px; padding: 15px 18px; font-size: 16px; border: 1px solid #d9d5ea; border-radius: 12px; outline: none; }
+  .signup input:focus { border-color: #6d5efc; box-shadow: 0 0 0 4px #6d5efc22; }
+  button { padding: 15px 24px; font-size: 16px; font-weight: 600; border: 0; border-radius: 12px; background: #6d5efc; color: #fff; cursor: pointer; transition: transform .15s, background .15s; }
+  button:hover { background: #5a4af0; transform: translateY(-1px); }
+  .ok { margin-top: 16px; color: #1a9b5b; font-weight: 600; opacity: 0; transition: opacity .3s; }
+  .ok.show { opacity: 1; }
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; padding: 40px 64px 80px; max-width: 1240px; margin: 0 auto; }
+  .card { background: #fff; border: 1px solid #ebe8f5; border-radius: 18px; padding: 28px; transition: box-shadow .2s, transform .2s; }
+  .card:hover { box-shadow: 0 18px 40px #6d5efc1f; transform: translateY(-3px); }
+  .card h3 { font-size: 20px; margin: 14px 0 8px; }
+  .card p { color: #5b5770; line-height: 1.5; }
+  .icon { width: 44px; height: 44px; border-radius: 12px; background: #efecff; display: grid; place-items: center; font-size: 22px; }
+  .pricing { text-align: center; padding: 40px 20px 120px; }
+  .pricing h2 { font-size: 42px; letter-spacing: -0.03em; }
+  .plans { display: flex; justify-content: center; gap: 22px; margin-top: 34px; }
+  .plan { width: 300px; text-align: left; background: #fff; border: 1px solid #ebe8f5; border-radius: 18px; padding: 30px; }
+  .plan.pro { border: 2px solid #6d5efc; }
+  .price { font-size: 44px; font-weight: 800; margin: 10px 0 18px; }
+  .plan li { margin: 8px 0 8px 18px; color: #4b4760; }
+</style>
+</head>
+<body>
+  <nav><div class="logo">lum<b>en</b></div><div><a href="#features">Features</a><a href="#pricing">Pricing</a><a href="#">Sign in</a></div></nav>
+  <section class="hero">
+    <h1>Notes that think<br />with you.</h1>
+    <p>Lumen links every idea you write, surfaces what matters, and drafts the next step for you.</p>
+    <form class="signup" onsubmit="event.preventDefault(); document.querySelector('.ok').classList.add('show')">
+      <input id="email" type="email" placeholder="you@company.com" />
+      <button id="join" type="submit">Get early access</button>
+    </form>
+    <div class="ok">You're on the list ✓</div>
+  </section>
+  <section id="features" class="features">
+    <div class="card"><div class="icon">🔗</div><h3>Auto-linking</h3><p>Every note connects to the ideas it mentions, automatically.</p></div>
+    <div class="card" id="card-recall"><div class="icon">✨</div><h3>Smart recall</h3><p>The right note appears the moment you need it.</p></div>
+    <div class="card"><div class="icon">✍️</div><h3>Next-step drafts</h3><p>Turn a messy page into a plan, an email, or a brief.</p></div>
+  </section>
+  <section id="pricing" class="pricing">
+    <h2>Simple pricing</h2>
+    <div class="plans">
+      <div class="plan"><b>Free</b><div class="price">$0</div><ul><li>Unlimited notes</li><li>Auto-linking</li></ul></div>
+      <div class="plan pro" id="plan-pro"><b>Pro</b><div class="price">$8</div><ul><li>Everything in Free</li><li>Smart recall</li><li>Next-step drafts</li></ul></div>
+    </div>
+  </section>
+</body>
+</html>

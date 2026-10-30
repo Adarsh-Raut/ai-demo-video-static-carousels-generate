@@ -1,0 +1,27 @@
+{
+  "name": "site-video-generate",
+  "version": "1.0.0",
+  "scripts": {
+    "demo": "tsx src/cli.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Local, zero-cost demo videos from a website: Playwright + Kokoro + HyperFrames + FFmpeg",
+  "dependencies": {
+    "hyperframes": "^0.8.221",
+    "playwright": "^1.64.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  },
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "id": "lumen",
+  "url": "file://./site/index.html",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "brand": {
+    "name": "Lumen",
+    "accent": "#6d5efc",
+    "ground": "#0d0b1a",
+    "ink": "#ffffff",
+    "font": "Inter"
+  },
+  "voice": {
+    "voice": "af_heart",
+    "speed": 1
+  },
+  "intro": {
+    "headline": "Notes that think with you.",
+    "sub": "A two-minute tour of Lumen",
+    "narration": "Meet Lumen, the notes app that thinks with you."
+  },
+  "scenes": [
+    {
+      "id": "signup",
+      "title": "Join in seconds",
+      "narration": "Getting started takes seconds. Drop in your email and you're on the list.",
+      "actions": [
+        {
+          "type": "type",
+          "selector": "#email",
+          "text": "ada@lumen.app",
+          "zoom": 1.6
+        },
+        {
+          "type": "click",
+          "selector": "#join",
+          "zoom": 1.6,
+          "callout": "One click to join"
+        },
+        {
+          "type": "wait",
+          "seconds": 0.6
+        }
+      ]
+    },
+    {
+      "id": "features",
+      "title": "Smart recall",
+      "narration": "Lumen links every idea for you, and smart recall brings back the right note the moment you need it.",
+      "actions": [
+        {
+          "type": "scrollTo",
+          "selector": "#features",
+          "duration": 1.4
+        },
+        {
+          "type": "hover",
+          "selector": "#card-recall",
+          "callout": "Recall finds it for you",
+          "zoom": 1.5,
+          "hold": 1.6
+        }
+      ]
+    },
+    {
+      "id": "pricing",
+      "title": "Free to start",
+      "narration": "It's free to start. Go Pro for recall and drafts.",
+      "actions": [
+        {
+          "type": "scrollTo",
+          "selector": "#pricing",
+          "duration": 1.4
+        },
+        {
+          "type": "hover",
+          "selector": "#plan-pro",
+          "callout": "Pro is $8 a month",
+          "zoom": 1.35,
+          "hold": 1.4
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "headline": "Think less about notes.",
+    "cta": "Get early access",
+    "narration": "Lumen. Get early access today."
+  }
+}

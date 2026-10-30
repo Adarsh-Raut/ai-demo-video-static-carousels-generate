@@ -1,0 +1,47 @@
+{
+  "id": "linear",
+  "url": "https://linear.app",
+  "viewport": { "width": 1440, "height": 900 },
+  "chrome": "dark",
+  "brand": { "name": "Linear", "accent": "#5e6ad2", "ground": "#08090a", "ink": "#ffffff", "font": "Inter" },
+  "voice": { "engine": "kokoro", "voice": "af_heart", "speed": 1 },
+  "intro": {
+    "headline": "Plan and build with agents.",
+    "sub": "A quick look at Linear",
+    "narration": "This is Linear, the product development system for teams and agents."
+  },
+  "scenes": [
+    {
+      "id": "delegate",
+      "title": "Agents on every issue",
+      "narration": "Every issue can be handed straight to an agent.",
+      "actions": [
+        { "type": "hover", "selector": "button[aria-label=\"Delegate to an agent\"]", "callout": "Delegate to an agent", "zoom": 1.6 }
+      ]
+    },
+    {
+      "id": "intake",
+      "title": "Intake",
+      "narration": "Conversations and customer requests turn into issues automatically.",
+      "actions": [
+        { "type": "scrollTo", "selector": "section:has(h2:has-text(\"Intakeand integrations\"))", "duration": 1.6, "offset": 0.05 },
+        { "type": "hover", "selector": "button[aria-label=\"Send message\"]", "callout": "Ask Linear in the thread", "zoom": 1.5 }
+      ]
+    },
+    {
+      "id": "planning",
+      "title": "Planning",
+      "narration": "Then plan the work and keep every project on track.",
+      "actions": [
+        { "type": "scrollTo", "selector": "section:has(h2:has-text(\"Planningand monitoring\"))", "duration": 1.6, "offset": 0.05 },
+        { "type": "wait", "seconds": 0.6 },
+        { "type": "hover", "selector": "button:has-text(\"Projects +\")", "callout": "Projects at a glance", "zoom": 1.4 }
+      ]
+    }
+  ],
+  "outro": {
+    "headline": "Built for the future.",
+    "cta": "Sign up for free",
+    "narration": "Linear. Available today."
+  }
+}
