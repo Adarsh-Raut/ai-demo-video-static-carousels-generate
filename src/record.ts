@@ -236,6 +236,7 @@ const CONSENT_SELECTORS = [
   "#onetrust-banner-sdk", "#onetrust-consent-sdk", "#CybotCookiebotDialog", ".cky-consent-container",
   "#usercentrics-root", ".qc-cmp2-container", "#truste-consent-track", ".cc-window", ".cookie-banner",
   "[id*='cookie-banner' i]", "[class*='cookie-banner' i]", "[id*='consent-banner' i]", "[aria-label*='cookie' i][role='dialog']",
+  "[aria-label*='cookie' i][role='region']", "[class*='cookie-notice' i]", "[id*='cookie-notice' i]",
   "#intercom-container", ".intercom-lightweight-app", "#hubspot-messages-iframe-container", "iframe[title*='chat' i]",
   "#crisp-chatbox", ".drift-frame-controller",
 ];

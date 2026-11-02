@@ -134,11 +134,12 @@ function roundedRect(x: number, y: number, w: number, h: number, r: number) {
 
 // Camera transform (origin 0 0) that centres a stage point at scale s. Once zoomed far
 // enough for the window to fill the frame, it never shows past the window's edges;
-// otherwise it never shows past the frame.
+// otherwise the whole window stays in frame.
 function aim(win: Win, p: { x: number; y: number }, s: number): Cam {
   const axis = (target: number, size: number, lo: number, len: number) => {
     const want = size / 2 - s * target;
-    const [min, max] = s * len >= size ? [size - s * (lo + len), -s * lo] : [size - size * s, 0];
+    // Too small to fill: keep the whole window in frame instead of cutting one edge.
+    const [min, max] = s * len >= size ? [size - s * (lo + len), -s * lo] : [-s * lo, size - s * (lo + len)];
     return round(Math.min(max, Math.max(min, want)), 1);
   };
   return { scale: s, x: axis(p.x, W, win.x, win.w), y: axis(p.y, H, win.y, win.h) };
@@ -440,6 +441,8 @@ function introHtml(ctx: Ctx, slot: Slot) {
     spec.intro.sub
       ? `tl.fromTo("#intro-sub", { opacity: 0, filter: "blur(6px)" }, { opacity: 0.85, filter: "blur(0px)", duration: 0.24, ease: "power3.out" }, ${round(0.6 + words.length * 0.1)});`
       : "",
+    // A slow push-in keeps a long voiced intro from sitting dead still.
+    `tl.fromTo("#intro-headline", { scale: 0.98 }, { scale: 1.04, duration: ${round(D)}, ease: "none" }, 0);`,
     `tl.to("#intro-card", { opacity: 0, scale: 1.1, filter: "blur(12px)", duration: 0.34, ease: "power3.in" }, ${round(D - 0.36)});`,
   ];
   return card(ctx, "intro", D, `
@@ -463,6 +466,7 @@ function outroHtml(ctx: Ctx, slot: Slot) {
     `tl.fromTo("#outro-headline", { opacity: 0, y: 24, filter: "blur(10px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "expo.out" }, 0.3);`,
     spec.outro.cta ? `tl.fromTo("#outro-cta", { opacity: 0, scale: 0.92 }, { opacity: 1, scale: 1, duration: 0.55, ease: "expo.out" }, 0.75);` : "",
     spec.outro.cta ? `tl.fromTo("#outro-cta-shine", { x: -260 }, { x: 520, duration: 0.9, ease: "power2.inOut" }, 1.25);` : "",
+    `tl.fromTo("#outro-headline", { scale: 0.98 }, { scale: 1.04, duration: ${round(D)}, ease: "none" }, 0);`,
     `tl.fromTo("#outro-url", { opacity: 0 }, { opacity: 0.7, duration: 0.4, ease: "power2.out" }, 1.05);`,
   ]);
 }
@@ -488,6 +492,20 @@ function card(ctx: Ctx, id: string, D: number, body: string, tweens: string[]) {
 }
 
 // ---------- shared look ----------
+
+// The accent, lightened toward white until it reads on the ground (WCAG 4.5:1).
+function readableOn(accent: string, ground: string) {
+  const rgb = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const lum = (c: number[]) =>
+    c.map((v) => (v /= 255) <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4).reduce((a, v, i) => a + v * [0.2126, 0.7152, 0.0722][i], 0);
+  const g = lum(rgb(ground));
+  const a = rgb(accent);
+  for (let t = 0; t <= 1; t += 0.05) {
+    const c = a.map((v) => Math.round(v + (255 - v) * t));
+    if ((lum(c) + 0.05) / (g + 0.05) >= 4.5) return "#" + c.map((v) => v.toString(16).padStart(2, "0")).join("");
+  }
+  return "#ffffff";
+}
 
 function baseStyles(brand: Spec["brand"]) {
   const { accent, ground, ink, font } = brand;
@@ -521,7 +539,7 @@ function baseStyles(brand: Spec["brand"]) {
     .label { position: absolute; left: 120px; bottom: 80px; z-index: 50; padding: 16px 26px; border-radius: 14px;
       background: ${ground}e8; border: 1px solid ${accent}88; font-size: 40px; font-weight: 700; letter-spacing: -0.01em; }
     .word { display: inline-block; }
-    .accent { color: ${accent}; }
+    .accent { color: ${readableOn(accent, ground)}; }
     .brand { font-size: 32px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
     .headline { font-size: 104px; font-weight: 900; letter-spacing: -0.04em; line-height: 1.02; max-width: 1560px; margin: 0; }
     .rule { width: 160px; height: 4px; border-radius: 2px; background: ${accent}; transform-origin: 50% 50%; }

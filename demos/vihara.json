@@ -1,0 +1,158 @@
+{
+  "id": "vihara",
+  "url": "https://www.vihara.ai/",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "chrome": "light",
+  "brand": {
+    "name": "Vihara",
+    "accent": "#0047fb",
+    "ground": "#060a1c",
+    "ink": "#ffffff",
+    "font": "Inter"
+  },
+  "voice": {
+    "engine": "kokoro",
+    "voice": "af_heart",
+    "speed": 1
+  },
+  "music": "../audio/music/wallpaper.mp3",
+  "musicVolume": 0.14,
+  "intro": {
+    "headline": "Property auctions, reimagined with AI.",
+    "sub": "A quick tour of vihara.ai",
+    "narration": "Meet Vihara, the AI-powered marketplace for bank-owned property auctions."
+  },
+  "scenes": [
+    {
+      "id": "search",
+      "title": "Search in your own words",
+      "narration": "Start by describing your ideal home in your own words. Every listing shows an estimated value, with all buyer fees upfront.",
+      "actions": [
+        {
+          "type": "wait",
+          "seconds": 0.4
+        },
+        {
+          "type": "type",
+          "selector": "input[aria-label=\"Describe your ideal home, or enter a city or zip\"]",
+          "text": "3-bed homes under $300k in California",
+          "zoom": 1.5,
+          "callout": "Just describe it"
+        }
+      ]
+    },
+    {
+      "id": "floor",
+      "title": "The auction floor",
+      "narration": "Then step onto the auction floor, and spin through the properties going to auction next.",
+      "actions": [
+        {
+          "type": "scrollTo",
+          "selector": "section.hv-ring-section",
+          "offset": 0.06,
+          "duration": 1.4
+        },
+        {
+          "type": "click",
+          "selector": "button[aria-label=\"Next property\"]",
+          "zoom": 1.45,
+          "callout": "Spin to the next home"
+        },
+        {
+          "type": "wait",
+          "seconds": 0.5
+        },
+        {
+          "type": "click",
+          "selector": "button[aria-label=\"Next property\"]",
+          "zoom": 1.45,
+          "spotlight": false
+        },
+        {
+          "type": "wait",
+          "seconds": 0.6
+        }
+      ]
+    },
+    {
+      "id": "assistant",
+      "title": "Your AI assistant",
+      "narration": "Your AI assistant finds the deals for you, with smart alerts, deal insights and bidding tips, so you can move fast.",
+      "actions": [
+        {
+          "type": "scrollTo",
+          "selector": "article.hv-story-step[data-step=\"0\"]",
+          "offset": 0.12,
+          "duration": 1.5
+        },
+        {
+          "type": "wait",
+          "seconds": 0.8
+        },
+        {
+          "type": "hover",
+          "selector": ".hv-story-sticky",
+          "zoom": 1.4,
+          "callout": "It finds the deals",
+          "hold": 1.8
+        }
+      ]
+    },
+    {
+      "id": "numbers",
+      "title": "The full financial picture",
+      "narration": "Before you bid, see the full financial picture: market value, renovation cost and estimated rent, side by side.",
+      "actions": [
+        {
+          "type": "scrollTo",
+          "selector": "article.hv-story-step[data-step=\"2\"]",
+          "offset": 0.12,
+          "duration": 1.6
+        },
+        {
+          "type": "wait",
+          "seconds": 0.8
+        },
+        {
+          "type": "hover",
+          "selector": ".hv-story-sticky",
+          "zoom": 1.4,
+          "callout": "Know your margin",
+          "hold": 1.8
+        }
+      ]
+    },
+    {
+      "id": "steps",
+      "title": "Three steps to bid",
+      "narration": "Sign up in seconds, let AI uncover the insights, and place real-time bids with full transparency.",
+      "actions": [
+        {
+          "type": "scrollTo",
+          "selector": "section:has(h2:has-text(\"Three steps to your first winning bid\"))",
+          "offset": 0.04,
+          "duration": 1.6
+        },
+        {
+          "type": "wait",
+          "seconds": 1
+        },
+        {
+          "type": "hover",
+          "selector": "li.hv-flow-step:nth-child(3)",
+          "zoom": 1.4,
+          "callout": "Bid in real time",
+          "hold": 1.4
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "headline": "Your next property is one bid away.",
+    "cta": "Get started at vihara.ai",
+    "narration": "Vihara. Your next property is one bid away. Get started today."
+  }
+}
