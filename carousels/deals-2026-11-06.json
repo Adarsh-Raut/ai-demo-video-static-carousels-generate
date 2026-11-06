@@ -1,0 +1,113 @@
+{
+  "id": "deals-2026-11-06",
+  "brand": {
+    "name": "Vihara",
+    "accent": "#0047fb",
+    "ground": "#060a1c",
+    "paper": "#f5f7ff",
+    "cream": "#f6f1e7",
+    "highlight": "#ffd43b",
+    "logo": "https://www.vihara.ai/images/vihara-logo.png",
+    "site": "vihara.ai"
+  },
+  "slides": [
+    {
+      "kind": "cover",
+      "kicker": "THIS WEEK ON VIHARA",
+      "title": "5 deals going to auction",
+      "sub": "Bank-owned homes, ranked by how far they start below our estimate.",
+      "photo": "https://res.cloudinary.com/drm9blcmj/image/upload/v1787662556/vihara/properties/16556-sallander-dr-sonora/itcotmlelcao1zr96ymb.jpg"
+    },
+    {
+      "kind": "listing",
+      "photo": "https://res.cloudinary.com/drm9blcmj/image/upload/v1792317626/vihara/properties/401-rensselaer-ave-ogdensburg/g30kmpbylyuf1uylq1kn.jpg",
+      "place": "OGDENSBURG, NY",
+      "address": "401 Rensselaer Ave",
+      "priceLabel": "STARTS AT",
+      "price": "$25K",
+      "badge": "54% BELOW ESTIMATE",
+      "facts": [
+        "3 bd",
+        "1.5 ba",
+        "2,048 sq ft",
+        "built 1918"
+      ],
+      "estimate": "$54,719",
+      "when": "Online auction · Sat, Nov 7 · 11:00 AM ET"
+    },
+    {
+      "kind": "listing",
+      "photo": "https://res.cloudinary.com/drm9blcmj/image/upload/v1787662556/vihara/properties/16556-sallander-dr-sonora/itcotmlelcao1zr96ymb.jpg",
+      "place": "SONORA, CA",
+      "address": "16556 Sallander Dr",
+      "priceLabel": "STARTS AT",
+      "price": "$250K",
+      "badge": "27% BELOW ESTIMATE",
+      "facts": [
+        "3 bd",
+        "1 ba",
+        "1,248 sq ft",
+        "built 1970"
+      ],
+      "estimate": "$343,000",
+      "when": "Online auction · Sun, Nov 15 · 11:00 AM PT"
+    },
+    {
+      "kind": "listing",
+      "photo": "https://res.cloudinary.com/drm9blcmj/image/upload/v1792318123/vihara/properties/1983-law-st-new-orleans/xqndrpgplv9cd5lqmxiz.jpg",
+      "place": "NEW ORLEANS, LA",
+      "address": "1983 Law St",
+      "priceLabel": "STARTS AT",
+      "price": "$126K",
+      "badge": "19% BELOW ESTIMATE",
+      "facts": [
+        "4 bd",
+        "2 ba",
+        "1,400 sq ft",
+        "built 1995"
+      ],
+      "estimate": "$156,115",
+      "when": "Online auction · Sun, Nov 15 · 11:00 AM CT"
+    },
+    {
+      "kind": "listing",
+      "photo": "https://res.cloudinary.com/drm9blcmj/image/upload/v1787664170/vihara/properties/1961-nikki-ann-way-turlock/eh5saqypinjtxxw0zetw.jpg",
+      "place": "TURLOCK, CA",
+      "address": "1961 Nikki Ann Way",
+      "priceLabel": "STARTS AT",
+      "price": "$422K",
+      "badge": "19% BELOW ESTIMATE",
+      "facts": [
+        "4 bd",
+        "2 ba",
+        "2,310 sq ft",
+        "built 1990"
+      ],
+      "estimate": "$520,784",
+      "when": "Online auction · Sun, Nov 15 · 11:00 AM PT"
+    },
+    {
+      "kind": "listing",
+      "photo": "https://res.cloudinary.com/drm9blcmj/image/upload/v1787662232/vihara/properties/1405-tamarack-ave-atwater/l3nuimsnzhvaecj5nza1.jpg",
+      "place": "ATWATER, CA",
+      "address": "1405 Tamarack Ave",
+      "priceLabel": "STARTS AT",
+      "price": "$291K",
+      "badge": "18% BELOW ESTIMATE",
+      "facts": [
+        "3 bd",
+        "2 ba",
+        "1,386 sq ft",
+        "built 1955"
+      ],
+      "estimate": "$357,020",
+      "when": "Online auction · Sun, Nov 15 · 11:00 AM PT"
+    },
+    {
+      "kind": "cta",
+      "title": "Bid from your phone",
+      "button": "vihara.ai",
+      "sub": "Link in bio · new auctions every week"
+    }
+  ]
+}

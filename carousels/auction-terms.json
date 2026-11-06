@@ -1,0 +1,60 @@
+{
+  "id": "auction-terms",
+  "brand": {
+    "name": "Vihara",
+    "logo": "https://www.vihara.ai/images/vihara-logo.png"
+  },
+  "slides": [
+    {
+      "kind": "cover",
+      "kicker": "AUCTION 101",
+      "title": "4 words every first-time bidder should know",
+      "sub": "Bank-owned auctions have their own language. Here it is in plain English."
+    },
+    {
+      "kind": "term",
+      "word": "R·E·O",
+      "pos": "noun, short for real estate owned",
+      "definitions": [
+        "A home a bank or lender took back after it didn't sell at foreclosure.",
+        "Often listed below market value, because the bank wants it sold."
+      ],
+      "example": "“It's an REO, so the seller is a bank, not a family.”"
+    },
+    {
+      "kind": "term",
+      "word": "start·ing bid",
+      "pos": "noun",
+      "definitions": [
+        "The lowest opening offer the auction will take.",
+        "Bids climb from here, one increment at a time."
+      ],
+      "example": "“The starting bid was $25,000, under half the estimate.”"
+    },
+    {
+      "kind": "term",
+      "word": "bid in·cre·ment",
+      "pos": "noun",
+      "definitions": [
+        "The smallest amount each new bid must beat the last one by.",
+        "If the increment is $1,000, a $25,000 bid can only be topped by $26,000 or more."
+      ]
+    },
+    {
+      "kind": "term",
+      "word": "oc·cu·pied",
+      "pos": "adjective",
+      "definitions": [
+        "Someone still lives in the home.",
+        "You usually can't tour inside before the auction, so the photos, reports and estimate matter more."
+      ],
+      "origin": "Check the listing: occupancy is shown on every Vihara property"
+    },
+    {
+      "kind": "cta",
+      "title": "See today's auctions",
+      "button": "vihara.ai",
+      "sub": "Link in bio · save this for your first bid"
+    }
+  ]
+}

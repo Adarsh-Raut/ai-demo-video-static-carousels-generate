@@ -59,6 +59,24 @@ npm run social -- reel reels/703-59th-ave-capitol-heights.json                  
 
 The listing page supplies the photos, price, Vihara estimate, beds, baths, square footage and auction date, and the starter spec writes copy from them. Without `--new`, a URL goes straight to a finished reel (about a minute). Scenes: hook → value (estimate struck through, bid ticks down, "18% below estimate" badge) → tour (photo cuts + fact chips) → auction date → light end card with the logo. Burned-in word-by-word captions use local Whisper timing (a one-time ~150 MB model download). The schema is in [src/social/reel-spec.ts](src/social/reel-spec.ts) and the workflow in [.claude/skills/listing-reel/SKILL.md](.claude/skills/listing-reel/SKILL.md).
 
+## Carousels (Instagram 1080×1350 slides + LinkedIn PDF)
+
+```bash
+npm run social -- carousel deals                      # live auctions, biggest discounts first → out/deals-<date>/
+npm run social -- carousel deals --under 200000 --state CA --count 4
+npm run social -- carousel carousels/auction-terms.json  # an editorial set written by hand or by Claude
+```
+
+Each carousel renders to `out/<id>/`: `01.png`, `02.png`… plus `<id>.pdf` and an `overview.jpg`. Slide kinds:
+- `cover`
+- `listing`
+- `term` (dictionary card)
+- `tip`
+- `stat`
+- `cta`
+
+The schema is in [src/social/carousel-spec.ts](src/social/carousel-spec.ts) and the workflow in [.claude/skills/social-carousel/SKILL.md](.claude/skills/social-carousel/SKILL.md).
+
 ## Writing a spec
 
 Schema: [src/spec.ts](src/spec.ts). Each scene has narration, an optional 2–4 word title, and the browser actions that show what the narration says:
