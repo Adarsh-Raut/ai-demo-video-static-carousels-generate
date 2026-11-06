@@ -2,6 +2,7 @@
   "name": "site-video-generate",
   "version": "1.0.0",
   "scripts": {
+    "setup": "tsx src/setup.ts",
     "demo": "tsx src/cli.ts",
     "typecheck": "tsc --noEmit",
     "social": "tsx src/social/cli.ts"

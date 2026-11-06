@@ -15,13 +15,20 @@ Polished product demo videos of any website, made entirely on this machine. Clau
 ## Setup (once)
 
 ```bash
-brew install ffmpeg
+brew install ffmpeg python@3.12      # skip what you already have; needs Node 22+
 npm install
-npx playwright install chromium
-python3 -m venv py/.venv && py/.venv/bin/pip install -r py/requirements.txt   # Kokoro voice
+npm run setup
 ```
 
-The first Kokoro run downloads a ~340 MB model into `~/.cache/hyperframes/tts`. Until that has finished, add `--engine say --voice Samantha` to use the built-in macOS voice instead.
+`npm run setup` checks or installs everything else:
+- the browsers used for recording and rendering
+- the Python environment for the voice
+- the Kokoro voice model (~355 MB)
+- the Whisper caption model (~150 MB)
+
+It finishes with a test that speaks a line and transcribes it. Every step checks first, so re-running it is safe, and an interrupted download resumes.
+
+The models go to `~/.cache/hyperframes`, outside the repo, and are never committed: GitHub rejects files over 100 MB. On a slow connection, download [kokoro-v1.0.onnx](https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx) in a browser instead. Setup finds it in `~/Downloads`, or you can pass `npm run setup -- --kokoro <file>`. Until the model is in place, add `--engine say --voice Samantha` to use the built-in macOS voice.
 
 ## Make a video of any site
 
