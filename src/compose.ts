@@ -11,7 +11,7 @@
 //   label    lower-third title, word by word
 // Motion blur is on for the whole film. Every timing comes from the frame-exact recording.
 // The output is plain editable HTML: polish it in HyperFrames Studio afterwards.
-import { copyFileSync, existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import {
   type Box,
@@ -26,13 +26,13 @@ import {
 } from "./record.ts";
 import { BUNDLED_FONTS } from "./scout.ts";
 import type { Spec } from "./spec.ts";
-import { probeDuration, ROOT, round, workDir } from "./util.ts";
+import { esc, GSAP, Sfx } from "./media.ts";
+import { round, workDir } from "./util.ts";
 import type { VoiceManifest } from "./voice.ts";
 
 const W = 1920;
 const H = 1080;
 const BAR = 44; // fake browser title bar
-const GSAP = "https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js";
 const ZOOM = { click: 1.45, type: 1.5, hover: 1.3 };
 const OUTRO_HOLD = 1.5;
 const PERSPECTIVE = 1800;
@@ -560,12 +560,6 @@ function cursorSvg(id: string) {
 
 // ---------- root + audio ----------
 
-type SfxKind = "click" | "whoosh" | "typing" | "pop";
-const SFX_KINDS: SfxKind[] = ["click", "whoosh", "typing", "pop"];
-// Measured: npx hyperframes audio <file> --json → moments.peak
-const PEAK: Record<SfxKind, number> = { click: 0.073, whoosh: 0.162, typing: 0, pop: 0.12 };
-const LANE: Record<SfxKind, number> = { click: 12, whoosh: 13, pop: 14, typing: 15 };
-
 function audioTags(
   spec: Spec,
   specDir: string,
@@ -591,20 +585,8 @@ function audioTags(
     );
   }
 
-  // Each effect is placed so its peak lands one frame after the picture (light before
-  // sound). Takes rotate per kind so repeats don't sound identical.
-  const sfx = sfxLibrary(project);
-  const used: Record<SfxKind, number> = { click: 0, whoosh: 0, typing: 0, pop: 0 };
-  const place = (kind: SfxKind, picture: number, volume: number, duration?: number) => {
-    const takes = sfx[kind];
-    const at = picture + 1 / 30 - PEAK[kind];
-    if (!takes.length || at < 0) return;
-    const n = used[kind]++;
-    const take = takes[n % takes.length];
-    const dur = round(Math.min(duration ?? take.duration, take.duration));
-    const fade = duration ? ` data-fade-out="0.12"` : "";
-    tags.push(`<audio id="sfx-${kind}-${n}" data-start="${round(at)}" data-duration="${dur}" data-track-index="${LANE[kind]}" data-volume="${volume}"${fade} src="${take.src}"></audio>`);
-  };
+  const sfx = new Sfx(project);
+  const place = sfx.place.bind(sfx);
   for (const slot of slots.slice(1)) place("whoosh", slot.start, 0.5);
   for (const scene of rec.scenes) {
     const slot = slots.find((s) => s.id === scene.id)!;
@@ -612,22 +594,7 @@ function audioTags(
     for (const b of beats(scene.events, scene.duration)) if (b.callout) place("pop", slot.start + calloutIn(b.move, b.act), 0.35);
   }
   for (const t of typing) place("typing", t.at, 0.45, t.duration);
-  return tags;
-}
-
-type Sfx = { src: string; duration: number };
-function sfxLibrary(project: string): Record<SfxKind, Sfx[]> {
-  const lib = join(ROOT, "audio", "sfx");
-  const out: Record<SfxKind, Sfx[]> = { click: [], whoosh: [], typing: [], pop: [] };
-  if (!existsSync(lib)) return out;
-  mkdirSync(join(project, "assets", "sfx"), { recursive: true });
-  for (const f of readdirSync(lib).sort()) {
-    const kind = SFX_KINDS.find((k) => f.startsWith(k));
-    if (!kind || !/\.(wav|mp3|ogg|flac)$/.test(f)) continue;
-    copyFileSync(join(lib, f), join(project, "assets", "sfx", f));
-    out[kind].push({ src: `assets/sfx/${f}`, duration: round(probeDuration(join(lib, f))) });
-  }
-  return out;
+  return [...tags, ...sfx.tags];
 }
 
 function indexHtml(spec: Spec, slots: Slot[], total: number, audio: string[]) {
@@ -663,4 +630,3 @@ function indexHtml(spec: Spec, slots: Slot[], total: number, audio: string[]) {
 `;
 }
 
-const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);

@@ -37,3 +37,5 @@ without any attribution requirement.
 ## Local variants
 
 `whoosh-a.mp3`, `click-a.mp3`, `typing-a.mp3` and `pop-a.mp3` are the bundled `whoosh.mp3`, `click.mp3`, `typing.mp3` and `pop.mp3`. The `-b` and `-c` files are pitch-shifted copies made with FFmpeg, so repeated sounds don't sound identical.
+
+`impact-a.mp3` and `sparkle-a.mp3` are the bundled `impact-bass-1.mp3` and `sparkle.mp3`.

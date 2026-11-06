@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "scripts": {
     "demo": "tsx src/cli.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "social": "tsx src/social/cli.ts"
   },
   "keywords": [],
   "author": "",

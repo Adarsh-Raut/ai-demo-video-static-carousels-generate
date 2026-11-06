@@ -1,0 +1,90 @@
+{
+  "id": "703-59th-ave-capitol-heights",
+  "listing": "https://www.vihara.ai/listing/703-59th-ave-capitol-heights",
+  "brand": {
+    "name": "Vihara",
+    "accent": "#0047fb",
+    "ground": "#060a1c",
+    "paper": "#f5f7ff",
+    "highlight": "#ffd43b",
+    "font": "Inter",
+    "logo": "https://www.vihara.ai/images/vihara-logo.png"
+  },
+  "voice": {
+    "engine": "kokoro",
+    "voice": "af_heart",
+    "speed": 1.08
+  },
+  "music": "../audio/music/wallpaper.mp3",
+  "musicVolume": 0.16,
+  "captions": true,
+  "photos": [
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791283767/vihara/properties/703-59th-ave-capitol-heights/wuraqv8i5oabga0rtjb3.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791283767/vihara/properties/703-59th-ave-capitol-heights/vzhptzn0hmqmewltikyf.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791283767/vihara/properties/703-59th-ave-capitol-heights/kjq3utcdaxp1a2xrtad4.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791283767/vihara/properties/703-59th-ave-capitol-heights/xh12ja3bsqzjd1etkcjh.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791283768/vihara/properties/703-59th-ave-capitol-heights/fgx32qrfb8j1yn7znr1h.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791283768/vihara/properties/703-59th-ave-capitol-heights/stb3lfztgeptjdskeocf.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791283768/vihara/properties/703-59th-ave-capitol-heights/qmotyn2rroxv1fdhwr3d.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791283768/vihara/properties/703-59th-ave-capitol-heights/landhjjl349mae3umnv1.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791283768/vihara/properties/703-59th-ave-capitol-heights/ztyocnksbxkpz6jsez6p.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791283768/vihara/properties/703-59th-ave-capitol-heights/prdjumqvhcmeptm3cbxr.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791283768/vihara/properties/703-59th-ave-capitol-heights/kvwxbsyrifgcjjbiipyk.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791283769/vihara/properties/703-59th-ave-capitol-heights/ojtkqqv8opbik2761sjl.jpg"
+  ],
+  "scenes": [
+    {
+      "kind": "hook",
+      "id": "hook",
+      "narration": "This 3-bedroom near D.C. starts at just $126K.",
+      "photo": 0,
+      "kicker": "BANK-OWNED \u00b7 CAPITOL HEIGHTS, MD",
+      "headline": "3-BED NEAR D.C.",
+      "priceLabel": "STARTS AT",
+      "price": "$126K"
+    },
+    {
+      "kind": "value",
+      "id": "value",
+      "narration": "Vihara estimates it's worth $155,118. That's 18% below value.",
+      "photo": 10,
+      "estimate": 155118,
+      "price": 126753,
+      "badge": "18% BELOW ESTIMATE"
+    },
+    {
+      "kind": "tour",
+      "id": "tour",
+      "narration": "3 beds, 1 bath, 1,180 sq ft. Stripped to the studs and ready for your plans.",
+      "photos": [
+        5,
+        2,
+        9,
+        1
+      ],
+      "chips": [
+        "3 BEDS",
+        "1 BATH",
+        "1,180 SQ FT",
+        "BUILT 1915"
+      ]
+    },
+    {
+      "kind": "auction",
+      "id": "auction",
+      "narration": "Bidding opens online Sunday, November 15.",
+      "photo": 11,
+      "label": "ONLINE AUCTION",
+      "date": "SUN, NOV 15",
+      "time": "11:00 AM ET"
+    },
+    {
+      "kind": "cta",
+      "id": "cta",
+      "narration": "Bid from your phone on Vihara. Link in bio.",
+      "headline": "Bid from your phone",
+      "button": "vihara.ai",
+      "sub": "Link in bio"
+    }
+  ]
+}

@@ -42,6 +42,16 @@ cd out/linear/project && npx hyperframes preview
 
 Re-running `compose` overwrites hand edits. After editing, use `render` only.
 
+## Listing reels (vertical, for Instagram / TikTok)
+
+```bash
+npm run social -- reel https://www.vihara.ai/listing/703-59th-ave-capitol-heights --new   # → reels/<slug>.json
+# edit the copy and pick photos (or ask Claude: "/listing-reel make a reel of <url>")
+npm run social -- reel reels/703-59th-ave-capitol-heights.json                         # → out/<slug>/<slug>.mp4
+```
+
+The listing page supplies the photos, price, Vihara estimate, beds, baths, square footage and auction date, and the starter spec writes copy from them. Without `--new`, a URL goes straight to a finished reel (about a minute). Scenes: hook → value (estimate struck through, bid ticks down, "18% below estimate" badge) → tour (photo cuts + fact chips) → auction date → light end card with the logo. Burned-in word-by-word captions use local Whisper timing (a one-time ~150 MB model download). The schema is in [src/social/reel-spec.ts](src/social/reel-spec.ts) and the workflow in [.claude/skills/listing-reel/SKILL.md](.claude/skills/listing-reel/SKILL.md).
+
 ## Writing a spec
 
 Schema: [src/spec.ts](src/spec.ts). Each scene has narration, an optional 2–4 word title, and the browser actions that show what the narration says:

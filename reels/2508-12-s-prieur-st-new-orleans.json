@@ -1,0 +1,101 @@
+{
+  "id": "2508-12-s-prieur-st-new-orleans",
+  "listing": "https://www.vihara.ai/listing/2508-12-s-prieur-st-new-orleans",
+  "brand": {
+    "name": "Vihara",
+    "accent": "#0047fb",
+    "ground": "#060a1c",
+    "paper": "#f5f7ff",
+    "highlight": "#ffd43b",
+    "font": "Inter",
+    "logo": "https://www.vihara.ai/images/vihara-logo.png"
+  },
+  "voice": {
+    "engine": "kokoro",
+    "voice": "af_heart",
+    "speed": 1.08
+  },
+  "music": "../audio/music/wallpaper.mp3",
+  "musicVolume": 0.16,
+  "captions": true,
+  "photos": [
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713369/vihara/properties/2508-12-s-prieur-st-new-orleans/tbhemckuzyl5ga5xlpne.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713369/vihara/properties/2508-12-s-prieur-st-new-orleans/emaagxdq0tcs0fpjx9nw.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713369/vihara/properties/2508-12-s-prieur-st-new-orleans/cgrsqp6xrud4e693uwhi.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713369/vihara/properties/2508-12-s-prieur-st-new-orleans/dfgbrckdl0k5lneksbxc.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713370/vihara/properties/2508-12-s-prieur-st-new-orleans/uiithvfupzz54zl9w7e8.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713370/vihara/properties/2508-12-s-prieur-st-new-orleans/bizsdr7rl0ubib6qilkj.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713370/vihara/properties/2508-12-s-prieur-st-new-orleans/bf3sfxr069ujungomxvm.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713370/vihara/properties/2508-12-s-prieur-st-new-orleans/qky5mwugntmsrml0zy5b.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713370/vihara/properties/2508-12-s-prieur-st-new-orleans/xhc1xoycouwer2qe1xld.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713370/vihara/properties/2508-12-s-prieur-st-new-orleans/xojchhjo58fjmiassbjp.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713370/vihara/properties/2508-12-s-prieur-st-new-orleans/qw3hbhtzjgjwlaoxwenv.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713371/vihara/properties/2508-12-s-prieur-st-new-orleans/dzencaxfup1akdnfc0fu.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713371/vihara/properties/2508-12-s-prieur-st-new-orleans/urjgn98vpu976z40xh4d.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713371/vihara/properties/2508-12-s-prieur-st-new-orleans/zhhegypfphrf5oulemeq.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713371/vihara/properties/2508-12-s-prieur-st-new-orleans/nlio4o359qz62fgd4j1h.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713371/vihara/properties/2508-12-s-prieur-st-new-orleans/rub3pk096jozbnbarbqg.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713371/vihara/properties/2508-12-s-prieur-st-new-orleans/sjeqygbcsdhblo1z6hi7.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713371/vihara/properties/2508-12-s-prieur-st-new-orleans/brka1kftdf1is0sljh1e.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713371/vihara/properties/2508-12-s-prieur-st-new-orleans/ctqfpsootzcgol8weim4.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713372/vihara/properties/2508-12-s-prieur-st-new-orleans/akvrlu6nhgnbppdmyklj.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713372/vihara/properties/2508-12-s-prieur-st-new-orleans/fswt9bf0wnjo0395mbop.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713372/vihara/properties/2508-12-s-prieur-st-new-orleans/t97agycqu3y5ea8eamlq.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713372/vihara/properties/2508-12-s-prieur-st-new-orleans/hen2vryk73mmlxprx5au.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713372/vihara/properties/2508-12-s-prieur-st-new-orleans/r1qqg6xg8cazeoklyqmz.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713373/vihara/properties/2508-12-s-prieur-st-new-orleans/cxipucrhwybbx87ohz6u.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713373/vihara/properties/2508-12-s-prieur-st-new-orleans/n5ivlaifphmzytkvjyxo.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713373/vihara/properties/2508-12-s-prieur-st-new-orleans/t98prtfjgixqo1rtksxu.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713373/vihara/properties/2508-12-s-prieur-st-new-orleans/alvkw8twrvsqfjotqrci.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713373/vihara/properties/2508-12-s-prieur-st-new-orleans/ru93zg3tm6bhojgpifvu.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713373/vihara/properties/2508-12-s-prieur-st-new-orleans/p7tcrngx0a5ko5ukgrwz.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713373/vihara/properties/2508-12-s-prieur-st-new-orleans/t284gubnnaydqyrfcmsq.jpg",
+    "https://res.cloudinary.com/drm9blcmj/image/upload/v1791713374/vihara/properties/2508-12-s-prieur-st-new-orleans/pogdnl4e7wu6zp3jjfcq.jpg"
+  ],
+  "scenes": [
+    {
+      "kind": "hook",
+      "id": "hook",
+      "narration": "This 10-bedroom multi-family in New Orleans, LA starts at $257K.",
+      "photo": 0,
+      "kicker": "BANK-OWNED · NEW ORLEANS, LA",
+      "headline": "10 BEDS",
+      "priceLabel": "STARTS AT",
+      "price": "$257K"
+    },
+    {
+      "kind": "tour",
+      "id": "tour",
+      "narration": "10 beds, 6 baths and 3,822 sq ft, built in 1959.",
+      "photos": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "chips": [
+        "10 BEDS",
+        "6 BATHS",
+        "3,822 SQ FT",
+        "BUILT 1959"
+      ]
+    },
+    {
+      "kind": "auction",
+      "id": "auction",
+      "narration": "Bidding opens online Sunday, November 15.",
+      "photo": 6,
+      "label": "ONLINE AUCTION",
+      "date": "SUN, NOV 15",
+      "time": "11:00 AM CT"
+    },
+    {
+      "kind": "cta",
+      "id": "cta",
+      "narration": "Bid from your phone on Vihara. Link in bio.",
+      "headline": "Bid from your phone",
+      "button": "vihara.ai",
+      "sub": "Link in bio"
+    }
+  ]
+}
