@@ -71,6 +71,20 @@ Reels also get one still per scene. The build commands refuse to run until a sto
 | No music | `--no-music` | `"music": false` |
 | No narration (music only, no captions) | `--no-voice` | `"narration": false` |
 
+## Motion videos (launch films from redrawn UI)
+
+```bash
+npm run motion -- motion/vihara.json             # build + storyboard with a still per scene, then stop
+npm run motion -- motion/vihara.json --render    # after approval → out/vihara-motion/vihara-motion.mp4
+```
+
+This is a launch film made from the product's UI, redrawn and animated rather than screen-recorded:
+- one short headline per scene ("Ask." "Check." "Bid.")
+- every scene a whole number of bars of the music
+- an accent-dot flood between scenes, opening on the bar line
+
+Scene kinds: `lines`, `logo`, `search`, `value`, `bid`, `checks`, `flood`, `end`. The schema is in [src/motion/spec.ts](src/motion/spec.ts) and the workflow in [.claude/skills/motion-video/SKILL.md](.claude/skills/motion-video/SKILL.md).
+
 ## Listing reels (vertical, for Instagram / TikTok)
 
 ```bash

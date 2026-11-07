@@ -40,7 +40,20 @@ export class Grid {
   readonly bpm: number;
   readonly mediaStart: number; // offset into the music file that plays at film time 0
 
-  constructor(map: BeatMap | null, horizon = 600) {
+  // `start`: play the track from this offset instead of its first detected downbeat (pick a
+  // bar line, e.g. when the track has a quiet intro the film should keep). Beats before the
+  // first detected one are continued backwards at the tempo.
+  constructor(map: BeatMap | null, horizon = 600, start?: number) {
+    if (map && start !== undefined && map.downbeats.length >= 2) {
+      const beat = 60 / map.bpm;
+      const back = (list: number[], step: number) => {
+        const out = [...list];
+        while (out[0] - step >= start - 0.02) out.unshift(out[0] - step);
+        return out;
+      };
+      map = { ...map, beats: back(map.beats, beat), downbeats: back(map.downbeats, beat * 4) };
+      map.downbeats = [start, ...map.downbeats.filter((t) => t > start + 0.05)];
+    }
     if (!map || map.downbeats.length < 2) {
       this.bpm = 120;
       this.beat = 0.5;

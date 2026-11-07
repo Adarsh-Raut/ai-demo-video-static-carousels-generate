@@ -13,3 +13,4 @@ Local, zero-cost demo videos of websites. The only paid part is the coding agent
 - Never use paid or account-bound paths: HeyGen voices/music/cloud, `hyperframes auth`, `publish`, `cloud`, `lambda`, `cloudrun`, `audio --quality best`, or `capture` without `--skip-vision`.
 - `npm run setup` (`src/setup.ts`) installs browsers, `py/.venv` (Kokoro TTS, from `py/requirements.txt`) and the Kokoro/Whisper models into `~/.cache/hyperframes`, which are never committed. `src/util.ts` points `HYPERFRAMES_PYTHON` at the venv. `--engine say --voice Samantha` skips Kokoro.
 - `npm run typecheck` after editing `src/`.
+- Motion videos (1920×1080 launch films from redrawn UI): `npm run motion -- motion/<id>.json [--render]`, code in `src/motion/`, specs in `motion/`. See `.claude/skills/motion-video/SKILL.md`. The hop soundtrack in `out/.music/` is for study only: never post a render that uses it.

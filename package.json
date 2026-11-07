@@ -5,7 +5,8 @@
     "setup": "tsx src/setup.ts",
     "demo": "tsx src/cli.ts",
     "typecheck": "tsc --noEmit",
-    "social": "tsx src/social/cli.ts"
+    "social": "tsx src/social/cli.ts",
+    "motion": "tsx src/motion/cli.ts"
   },
   "keywords": [],
   "author": "",

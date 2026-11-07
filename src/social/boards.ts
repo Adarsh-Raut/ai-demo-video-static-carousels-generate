@@ -47,7 +47,7 @@ function reelRow(s: ReelScene, D: number, grid: Grid): Pick<BoardRow, "onScreen"
 }
 
 // Stills of the composed (not yet rendered) reel: one per scene, at its middle.
-function stills(id: string, times: number[]) {
+export function stills(id: string, times: number[]) {
   const { project, dir } = workDir(id);
   const out = join(dir, "storyboard");
   try {
