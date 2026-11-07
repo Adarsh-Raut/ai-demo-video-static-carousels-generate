@@ -3,6 +3,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { z } from "zod";
+import { MusicChoice } from "./media.ts";
 
 // Pointer actions share: zoom (camera punch-in, default 1.45, 1 = none), callout (a short
 // bubble pointing at the element) and spotlight (dim everything else; default on for
@@ -57,9 +58,12 @@ export const Spec = z.object({
   voice: z
     .object({ engine: z.enum(["kokoro", "say"]).default("kokoro"), voice: z.string().default("af_heart"), speed: z.number().default(1) })
     .default({ engine: "kokoro", voice: "af_heart", speed: 1 }),
-  // Path (relative to the spec) to a music file. Omit for no music bed.
-  music: z.string().optional(),
-  musicVolume: z.number().default(0.14),
+  // false: no voiceover. Scenes then last as long as their actions (at least MIN_SCENE)
+  // and the music comes up to carry the film.
+  narration: z.boolean().default(true),
+  // "default" (the bundled bed), a path relative to the spec, or false for none.
+  music: MusicChoice,
+  musicVolume: z.number().default(0.14), // under the voiceover; raised when narration is off
   intro: z.object({ headline: z.string(), sub: z.string().optional(), narration: z.string().optional() }),
   outro: z.object({ headline: z.string(), cta: z.string().optional(), narration: z.string().optional() }),
   scenes: z.array(Scene).min(1),

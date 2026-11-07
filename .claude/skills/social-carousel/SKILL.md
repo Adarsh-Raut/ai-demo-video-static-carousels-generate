@@ -10,6 +10,10 @@ Code is in `src/social/carousel*.ts`: plain HTML/CSS slides screenshotted with P
 - `<id>.pdf` for LinkedIn document posts
 - `overview.jpg` contact sheet for review
 
+## Storyboard first
+
+Every run first writes `out/<id>/storyboard.md`, an outline with each slide's copy, and stops. Show the outline to the user and wait for approval. Then render with the same command plus `--render`. The render refuses to run if the spec changed since the outline was made; `--yes` skips the review only when the user says so.
+
 ## Deals (automatic)
 
 ```bash
@@ -28,7 +32,8 @@ This reads every live auction from vihara.ai/auctions, keeps those that haven't 
 Write `carousels/<id>.json` using the slide kinds in `src/social/carousel-spec.ts`: `cover`, `listing`, `term`, `tip`, `stat`, `cta`. See [carousels/auction-terms.json](../../../carousels/auction-terms.json) for an example. Then:
 
 ```bash
-npm run social -- carousel carousels/<id>.json
+npm run social -- carousel carousels/<id>.json            # outline, then stop
+npm run social -- carousel carousels/<id>.json --render   # after approval
 ```
 
 - **Structure:** a hook cover ("4 words every first-time bidder should know"), 3–8 content slides with one idea each, and a cta last. Instagram allows up to 20 slides.

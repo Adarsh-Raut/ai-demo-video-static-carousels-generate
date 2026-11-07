@@ -2,7 +2,9 @@
 
 Local, zero-cost demo videos of websites. The only paid part is the coding agent.
 
-- Pipeline: `src/` (TypeScript, run with `tsx`). Order: `scout <url>` → `voice` → `record` → `compose` → `check` → `render`. See `.claude/skills/demo-video/SKILL.md`.
+- Pipeline: `src/` (TypeScript, run with `tsx`). Order: `scout <url>` → `storyboard` → (user approves) → `voice` → `record` → `compose` → `check` → `render`. See `.claude/skills/demo-video/SKILL.md`.
+- Storyboard first, for every video and carousel: show the user `out/<id>/storyboard.md` (and the stills for reels) and wait for approval before building. The build commands refuse to run without a storyboard for the current spec (`src/storyboard.ts`); `--yes` skips the review, but only when the user says so.
+- Beat sync: `src/beats.ts` + `py/beats.py` beat-track the music. Scene ends go through `grid.cutAfter()` and accents through `snapper()`. Music is on by default (`"default"`), or your own file, or `false`. Narration can be turned off (`"narration": false` / `--no-voice`).
 - Code that runs inside the page (`page.evaluate`) is passed as a string, because tsx injects a `__name` helper the page doesn't have. Inside those template strings, regex escapes need a double backslash (`\\s`).
 - Specs live in `demos/` (yours) and `examples/` (reference). Output goes to `out/<id>/`, which is git-ignored.
 - Listing reels (1080×1920): `npm run social -- reel <listing-url | reels/<slug>.json>`, code in `src/social/`, specs in `reels/`. See `.claude/skills/listing-reel/SKILL.md`.

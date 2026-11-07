@@ -1,6 +1,7 @@
-// Shared HyperFrames pieces: GSAP, escaping, and sound-effect placement from audio/sfx.
+// Shared HyperFrames pieces: GSAP, escaping, the music bed and sound-effect placement from audio/sfx.
 import { copyFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { basename, join, resolve } from "node:path";
+import { z } from "zod";
 import { probeDuration, ROOT, round } from "./util.ts";
 
 export const GSAP = "https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js";
@@ -44,4 +45,40 @@ export class Sfx {
     const fade = duration ? ` data-fade-out="0.12"` : "";
     this.tags.push(`<audio id="sfx-${kind}-${n}" data-start="${round(at)}" data-duration="${dur}" data-track-index="${LANE[kind]}" data-volume="${volume}"${fade} src="${take.src}"></audio>`);
   }
+}
+
+// ---------- music ----------
+
+// Every video gets music unless asked not to: "default" (the bundled bed, see
+// audio/music/CREDITS.md), a path to your own track (relative to the spec), or false.
+export const DEFAULT_MUSIC = join(ROOT, "audio", "music", "wallpaper.mp3");
+export const MusicChoice = z.union([z.string(), z.literal(false)]).default("default");
+export type MusicChoice = z.infer<typeof MusicChoice>;
+
+export function resolveMusic(music: MusicChoice | undefined, specDir: string): string | null {
+  if (music === false || music === "none") return null;
+  const file = !music || music === "default" ? DEFAULT_MUSIC : resolve(specDir, music);
+  if (!existsSync(file)) throw new Error(`music file not found: ${file}`);
+  return file;
+}
+
+// CLI overrides shared by every command: --music <file|default>, --no-music, --no-voice.
+export function mediaFlags(flags: string[], cwd = process.cwd()) {
+  const i = flags.indexOf("--music");
+  return {
+    music: flags.includes("--no-music") ? (false as const) : i >= 0 ? (flags[i + 1] === "default" ? "default" : resolve(cwd, flags[i + 1])) : undefined,
+    narration: flags.includes("--no-voice") ? false : undefined,
+  };
+}
+
+// Under a voiceover the bed sits low; on its own it carries the film.
+export const musicVolume = (base: number, narration: boolean) => (narration ? base : Math.max(base, 0.5));
+
+// Copies the track into the project and returns its <audio> tag. It starts at the track's
+// first downbeat (mediaStart), so film time 0 is on the beat.
+export function musicTag(file: string, project: string, o: { total: number; volume: number; mediaStart: number; fadeIn?: number; fadeOut?: number }) {
+  mkdirSync(join(project, "assets", "music"), { recursive: true });
+  copyFileSync(file, join(project, "assets", "music", basename(file)));
+  const trim = o.mediaStart > 0 ? ` data-media-start="${round(o.mediaStart)}"` : "";
+  return `<audio id="music" data-timeline-role="music" data-start="0" data-duration="${o.total}"${trim} data-track-index="11" data-volume="${o.volume}" data-fade-in="${o.fadeIn ?? 0.05}" data-fade-out="${o.fadeOut ?? 1.5}" loop src="assets/music/${basename(file)}"></audio>`;
 }

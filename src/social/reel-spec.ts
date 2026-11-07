@@ -4,6 +4,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { z } from "zod";
+import { MusicChoice } from "../media.ts";
 import type { Listing } from "./listing.ts";
 
 const base = { id: z.string().regex(/^[a-z0-9-]+$/), narration: z.string() };
@@ -38,7 +39,8 @@ export const ReelSpec = z.object({
   voice: z
     .object({ engine: z.enum(["kokoro", "say"]).default("kokoro"), voice: z.string().default("af_heart"), speed: z.number().default(1.08) })
     .default({ engine: "kokoro", voice: "af_heart", speed: 1.08 }),
-  music: z.string().optional(),
+  narration: z.boolean().default(true), // false: no voiceover or captions, music carries it
+  music: MusicChoice, // "default", a path relative to the spec, or false
   musicVolume: z.number().default(0.16),
   captions: z.boolean().default(true),
   photos: z.array(z.string()).min(1),
@@ -142,7 +144,6 @@ export function starterReel(l: Listing, now = new Date()): ReelSpec {
     id: l.slug,
     listing: l.url,
     brand: { name: "Vihara", logo: "https://www.vihara.ai/images/vihara-logo.png" },
-    music: "../audio/music/wallpaper.mp3",
     photos: l.photos,
     scenes,
   });

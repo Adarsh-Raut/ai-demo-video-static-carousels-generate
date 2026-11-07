@@ -9,6 +9,7 @@
 import { mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { type Browser, chromium, type Page } from "playwright";
+import type { Grid } from "./beats.ts";
 import type { Action, Spec } from "./spec.ts";
 import { round, run, workDir, writeJson } from "./util.ts";
 import type { VoiceManifest } from "./voice.ts";
@@ -44,6 +45,7 @@ export const TYPE_FRAMES = 2;
 export type SceneTiming = { id: string; start: number; duration: number; events: PointerEvent[] };
 export type Recording = {
   video: string;
+  intro: number; // the intro card's length; scenes start after it in film time
   viewport: { width: number; height: number };
   scenes: SceneTiming[];
 };
@@ -51,6 +53,29 @@ export type Recording = {
 export function plannedDuration(id: string, vo: VoiceManifest) {
   const d = vo[id]?.duration;
   return d ? Math.max(MIN_SCENE, VO_LEAD + d + VO_TAIL) : MIN_SCENE;
+}
+
+// Film layout on the beat grid: every scene ends on a bar line (or a beat, if the next bar
+// is far), so each cut lands on the music.
+export const OUTRO_HOLD = 1.5;
+export const introLength = (vo: VoiceManifest, grid: Grid) => grid.cutAfter(plannedDuration("intro", vo));
+export const outroLength = (start: number, vo: VoiceManifest, grid: Grid) =>
+  round(grid.cutAfter(start + plannedDuration("outro", vo) + OUTRO_HOLD) - start);
+
+// Rough length of a scene before it is recorded (for the storyboard): the actions at the
+// recorder's own pacing, or the narration, whichever is longer.
+export function estimateScene(actions: Action[], id: string, vo: VoiceManifest, beat = 0.5) {
+  let t = VO_LEAD;
+  for (const a of actions) {
+    const read = "callout" in a ? readTime(a.callout) + 0.3 : 0;
+    if (a.type === "wait") t += a.seconds;
+    else if (a.type === "scroll" || a.type === "scrollTo") t += a.duration;
+    else if (a.type === "goto") t += 1 / FPS;
+    else if (a.type === "hover") t += MOVE_TIME + Math.max(a.hold, read);
+    else if (a.type === "click") t += MOVE_TIME + beat / 2 + 2 / FPS + Math.max(0.8, read - 0.1);
+    else if (a.type === "type") t += MOVE_TIME + beat / 2 + 2 / FPS + 0.25 + (a.text.length * TYPE_FRAMES) / FPS + Math.max(0.6, read - 0.1);
+  }
+  return Math.max(t, plannedDuration(id, vo));
 }
 
 // Cubic in-out: the same curve compose gives the drawn cursor (GSAP "power2.inOut").
@@ -64,12 +89,24 @@ class Director {
     readonly page: Page,
     readonly framesDir: string,
     viewport: { width: number; height: number },
+    readonly grid: Grid,
+    readonly filmOffset: number, // film time of recorded frame 0 (the intro plays before it)
   ) {
     this.pointer = { x: viewport.width / 2, y: viewport.height / 2 };
   }
 
   get t() {
     return this.frame / FPS;
+  }
+
+  get film() {
+    return this.filmOffset + this.frame / FPS;
+  }
+
+  // Wait for the next beat, so the press that follows lands on the music.
+  async toBeat() {
+    const gap = this.grid.beatAfter(this.film + 0.5 / FPS) - this.film;
+    if (gap < this.grid.beat * 0.9) await this.hold(gap);
   }
 
   // Advance the page exactly one frame and capture it.
@@ -134,7 +171,7 @@ const STEP_ANIMATIONS = `(dt) => {
   }
 }`;
 
-export async function record(spec: Spec, vo: VoiceManifest): Promise<Recording> {
+export async function record(spec: Spec, vo: VoiceManifest, grid: Grid): Promise<Recording> {
   const { dir, project } = workDir(spec.id);
   const framesDir = join(dir, "frames");
   rmSync(framesDir, { recursive: true, force: true });
@@ -145,7 +182,8 @@ export async function record(spec: Spec, vo: VoiceManifest): Promise<Recording> 
   const browser = await chromium.launch();
   try {
     const page = await openSite(browser, spec);
-    const d = new Director(page, framesDir, spec.viewport);
+    const intro = introLength(vo, grid);
+    const d = new Director(page, framesDir, spec.viewport, grid, intro);
     await page.mouse.move(d.pointer.x, d.pointer.y);
 
     const scenes: SceneTiming[] = [];
@@ -166,6 +204,8 @@ export async function record(spec: Spec, vo: VoiceManifest): Promise<Recording> 
       const tail = last && "callout" in last && last.callout ? 0.9 : 0;
       const remaining = plannedDuration(scene.id, vo) - (d.frame - startFrame) / FPS;
       await d.hold(Math.max(remaining, tail));
+      // Run on to the next bar line, so the cut lands on the music.
+      await d.hold(grid.cutAfter(d.film) - d.film);
       const timing = { id: scene.id, start: round(startFrame / FPS), duration: round((d.frame - startFrame) / FPS), events };
       scenes.push(timing);
       console.log(`rec  ${scene.id}  ${timing.duration}s  ${events.length} events  (${d.frame} frames)`);
@@ -178,7 +218,7 @@ export async function record(spec: Spec, vo: VoiceManifest): Promise<Recording> 
       "-c:v", "libx264", "-preset", "slow", "-crf", "15", "-pix_fmt", "yuv420p",
       "-g", "15", "-movflags", "+faststart", join(project, video),
     ]);
-    const rec: Recording = { video, viewport: { width, height }, scenes };
+    const rec: Recording = { video, intro, viewport: { width, height }, scenes };
     writeJson(join(dir, "recording.json"), rec);
     return rec;
   } finally {
@@ -297,6 +337,7 @@ async function perform(d: Director, spec: Spec, action: Action, events: PointerE
         await d.hold(Math.max(action.hold, read));
         return;
       }
+      await d.toBeat();
       events.push({ t: at(), kind: action.type, x: to.x, y: to.y, ...base, chars: action.type === "type" ? action.text.length : undefined });
       await page.mouse.down();
       await d.tick();

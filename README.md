@@ -35,6 +35,7 @@ The models go to `~/.cache/hyperframes`, outside the repo, and are never committ
 ```bash
 npm run demo -- scout https://linear.app                 # map the site → demos/linear.json starter
 # edit demos/linear.json (or ask Claude: "/demo-video make a demo of linear.app")
+npm run demo -- storyboard demos/linear.json            # plan → out/linear/storyboard.md, review it first
 npm run demo -- all demos/linear.json --quality draft    # voice → record → compose → check → render
 open out/linear/linear.mp4
 ```
@@ -49,20 +50,43 @@ cd out/linear/project && npx hyperframes preview
 
 Re-running `compose` overwrites hand edits. After editing, use `render` only.
 
+## Storyboards, beat sync, music and narration
+
+**Storyboard first.** Nothing is recorded or rendered until you've seen a storyboard, `out/<id>/storyboard.md`. It's a table of every scene with:
+- its time
+- what's on screen
+- the motion
+- the sound
+- the narration
+
+Reels also get one still per scene. The build commands refuse to run until a storyboard exists for the exact spec and options being built. If you edit the spec, make a new storyboard. `--yes` skips the review.
+
+**On the beat.** The music is beat-tracked locally ([py/beats.py](py/beats.py), numpy only, cached in `out/.beats/`). The film starts on the track's first downbeat, and every scene cut lands on a bar line, or the next beat when a bar is far away. Headline words, clicks, price punches, chips, photo changes and their sound effects land on beats. Each scene leaves in the last ~0.3 s before its cut and the next arrives on the beat. Without music, a steady 120 BPM grid keeps the rhythm.
+
+**Music and narration are options.** Both are on by default, using the bundled track.
+
+| Option | Flag | In the spec |
+| --- | --- | --- |
+| Your own track | `--music path/to/track.mp3` | `"music": "../audio/music/track.mp3"` |
+| No music | `--no-music` | `"music": false` |
+| No narration (music only, no captions) | `--no-voice` | `"narration": false` |
+
 ## Listing reels (vertical, for Instagram / TikTok)
 
 ```bash
 npm run social -- reel https://www.vihara.ai/listing/703-59th-ave-capitol-heights --new   # → reels/<slug>.json
 # edit the copy and pick photos (or ask Claude: "/listing-reel make a reel of <url>")
-npm run social -- reel reels/703-59th-ave-capitol-heights.json                         # → out/<slug>/<slug>.mp4
+npm run social -- reel reels/703-59th-ave-capitol-heights.json                         # storyboard + stills, then stops
+npm run social -- reel reels/703-59th-ave-capitol-heights.json --render                # after approval → out/<slug>/<slug>.mp4
 ```
 
-The listing page supplies the photos, price, Vihara estimate, beds, baths, square footage and auction date, and the starter spec writes copy from them. Without `--new`, a URL goes straight to a finished reel (about a minute). Scenes: hook → value (estimate struck through, bid ticks down, "18% below estimate" badge) → tour (photo cuts + fact chips) → auction date → light end card with the logo. Burned-in word-by-word captions use local Whisper timing (a one-time ~150 MB model download). The schema is in [src/social/reel-spec.ts](src/social/reel-spec.ts) and the workflow in [.claude/skills/listing-reel/SKILL.md](.claude/skills/listing-reel/SKILL.md).
+The listing page supplies the photos, price, Vihara estimate, beds, baths, square footage and auction date, and the starter spec writes copy from them. Without `--new`, a URL builds the reel and its storyboard in about a minute, then stops for your review; `--render` makes the video. Scenes: hook → value (estimate struck through, bid ticks down, "18% below estimate" badge) → tour (photo cuts + fact chips) → auction date → light end card with the logo. Burned-in word-by-word captions use local Whisper timing (a one-time ~150 MB model download). The schema is in [src/social/reel-spec.ts](src/social/reel-spec.ts) and the workflow in [.claude/skills/listing-reel/SKILL.md](.claude/skills/listing-reel/SKILL.md).
 
 ## Carousels (Instagram 1080×1350 slides + LinkedIn PDF)
 
 ```bash
-npm run social -- carousel deals                      # live auctions, biggest discounts first → out/deals-<date>/
+npm run social -- carousel deals                      # live auctions, biggest discounts first: outline first
+npm run social -- carousel deals --render             # after approval → out/deals-<date>/
 npm run social -- carousel deals --under 200000 --state CA --count 4
 npm run social -- carousel carousels/auction-terms.json  # an editorial set written by hand or by Claude
 ```
@@ -92,7 +116,8 @@ Top-level options:
 - `brand` (name, accent, ground, ink, font)
 - `chrome: "light" | "dark"` for the browser frame
 - `hide: [selectors]` for clutter
-- `music`
+- `music`: `"default"` (the default), a path relative to the spec, or `false`
+- `narration`: `true` (the default) or `false` for a music-only film
 
 Common cookie banners are declined or hidden automatically, and so are chat widgets. A selector that fails on the live site is skipped with a warning; it doesn't crash the run. The whole recording is one continuous browser session, so logins and other state carry across scenes. Local sites work too: `http://localhost:3000`, or `file://./page.html` (relative to the spec).
 
@@ -114,7 +139,7 @@ For more, use the HyperFrames registry (shader transitions, kinetic type, stat c
 - Recording takes 1–3 minutes on heavy sites, because every frame is a full 2× screenshot.
 - Spotlights and callouts are placed from the element's position when the action runs. If the page moves under them afterwards, they drift.
 - Animations driven by real time outside the page's JS clock (for example cross-origin iframes) aren't frame-stepped.
-- One music track is included: `audio/music/wallpaper.mp3` (Kevin MacLeod, CC BY 4.0; credit it in the video description, see `audio/music/CREDITS.md`). Use it with `"music": "../audio/music/wallpaper.mp3"`, or add your own royalty-free track.
+- One music track is included and used by default: `audio/music/wallpaper.mp3` (Kevin MacLeod, CC BY 4.0; credit it in the video description, see `audio/music/CREDITS.md`). Pass `--music <file>` or set `"music"` to use your own royalty-free track, or `false` for none.
 
 ## Never used
 

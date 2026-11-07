@@ -13,10 +13,12 @@
 // The output is plain editable HTML: polish it in HyperFrames Studio afterwards.
 import { copyFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
+import type { Grid } from "./beats.ts";
 import {
   type Box,
   FPS,
-  plannedDuration,
+  introLength,
+  outroLength,
   type PointerEvent,
   type Recording,
   readTime,
@@ -26,7 +28,7 @@ import {
 } from "./record.ts";
 import { BUNDLED_FONTS } from "./scout.ts";
 import type { Spec } from "./spec.ts";
-import { esc, GSAP, Sfx } from "./media.ts";
+import { esc, GSAP, musicTag, musicVolume, resolveMusic, Sfx } from "./media.ts";
 import { round, workDir } from "./util.ts";
 import type { VoiceManifest } from "./voice.ts";
 
@@ -34,41 +36,46 @@ const W = 1920;
 const H = 1080;
 const BAR = 44; // fake browser title bar
 const ZOOM = { click: 1.45, type: 1.5, hover: 1.3 };
-const OUTRO_HOLD = 1.5;
 const PERSPECTIVE = 1800;
 
 type Seam = "tilt" | "whip" | "zoom" | "blur";
 const SEAMS: Seam[] = ["whip", "zoom", "tilt", "blur"];
+// How scene i of n enters and leaves. The old shot leaves in the last ~0.3 s before the cut,
+// the new one enters on the cut (the beat), over the same continuous ground.
+export const seamsFor = (i: number, n: number): { enter: Seam; exit: Seam } => ({
+  enter: i === 0 ? "tilt" : SEAMS[(i - 1) % SEAMS.length],
+  exit: i === n - 1 ? "zoom" : SEAMS[i % SEAMS.length],
+});
 
 type Slot = { id: string; start: number; duration: number };
 
-export function compose(spec: Spec, specDir: string, vo: VoiceManifest, rec: Recording) {
+export function compose(spec: Spec, specDir: string, vo: VoiceManifest, rec: Recording, grid: Grid) {
   const { project } = workDir(spec.id);
   mkdirSync(join(project, "compositions"), { recursive: true });
   const brand = { ...spec.brand, font: BUNDLED_FONTS.includes(spec.brand.font) ? spec.brand.font : "Inter" };
 
-  // Root timeline layout: intro → scenes (recorded lengths) → outro.
+  // Root timeline layout: intro → scenes (recorded lengths) → outro. The recorder ran every
+  // scene on to a bar line, so each slot boundary is a cut on the music.
   const slots: Slot[] = [];
   let t = 0;
   const push = (id: string, duration: number) => {
     slots.push({ id, start: round(t), duration: round(duration) });
     t += duration;
   };
-  push("intro", plannedDuration("intro", vo));
+  push("intro", rec.intro ?? introLength(vo, grid));
   for (const s of rec.scenes) push(s.id, s.duration);
-  push("outro", plannedDuration("outro", vo) + OUTRO_HOLD);
+  push("outro", outroLength(t, vo, grid));
   const total = round(t);
 
   const win = windowGeometry(rec.viewport);
-  const ctx = { spec, brand, win, rec };
+  const ctx = { spec, brand, win, rec, grid };
   writeFileSync(join(project, "compositions", "intro.html"), introHtml(ctx, slots[0]));
   let pointer = { x: W / 2, y: H * 0.62 };
   const typing: { at: number; duration: number }[] = [];
   rec.scenes.forEach((scene, i) => {
     const s = spec.scenes.find((x) => x.id === scene.id)!;
     const slot = slots[i + 1];
-    const enter: Seam = i === 0 ? "tilt" : SEAMS[(i - 1) % SEAMS.length];
-    const exit: Seam = i === rec.scenes.length - 1 ? "zoom" : SEAMS[i % SEAMS.length];
+    const { enter, exit } = seamsFor(i, rec.scenes.length);
     const out = sceneHtml(ctx, { scene, slot, title: s.title, enter, exit, pointer });
     pointer = out.lastPointer;
     typing.push(...out.typing.map((x) => ({ at: slot.start + x.at, duration: x.duration })));
@@ -76,7 +83,7 @@ export function compose(spec: Spec, specDir: string, vo: VoiceManifest, rec: Rec
   });
   writeFileSync(join(project, "compositions", "outro.html"), outroHtml(ctx, slots.at(-1)!));
 
-  const audio = audioTags(spec, specDir, vo, rec, slots, total, project, typing);
+  const audio = audioTags(spec, specDir, vo, rec, slots, total, project, typing, grid);
   writeFileSync(join(project, "index.html"), indexHtml(spec, slots, total, audio));
   writeFileSync(
     join(project, "hyperframes.json"),
@@ -96,7 +103,7 @@ export function compose(spec: Spec, specDir: string, vo: VoiceManifest, rec: Rec
   return { project, total };
 }
 
-type Ctx = { spec: Spec; brand: Spec["brand"]; win: Win; rec: Recording };
+type Ctx = { spec: Spec; brand: Spec["brand"]; win: Win; rec: Recording; grid: Grid };
 
 // ---------- geometry ----------
 
@@ -424,10 +431,16 @@ function groundTweens(id: string, slot: Slot) {
 // ---------- title cards ----------
 
 function introHtml(ctx: Ctx, slot: Slot) {
-  const { spec } = ctx;
+  const { spec, grid } = ctx;
   const D = slot.duration;
   const words = spec.intro.headline.split(/\s+/);
   const last = words.length - 1;
+  // One word per beat (half-beats for a long headline), so the title lands with the music.
+  const beats = grid.within(0, D);
+  const halves = beats.flatMap((b, i) => [b, round((b + (beats[i + 1] ?? b + grid.beat)) / 2)]);
+  const steps = words.length * grid.beat <= D * 0.45 ? beats : halves;
+  const wordAt = (i: number) => steps[i] ?? round(i * 0.12);
+  const after = wordAt(last) + 0.25;
   const tw = [
     ...groundTweens("intro", slot),
     `tl.set("#intro-brand", { opacity: 0.75 }, 0);`,
@@ -435,11 +448,11 @@ function introHtml(ctx: Ctx, slot: Slot) {
     // the last word lands in the accent colour.
     ...words.map(
       (_, i) =>
-        `tl.fromTo("#intro-w${i}", { opacity: 0.16, filter: "blur(4px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.24, ease: "power2.out" }, ${round(0.35 + i * 0.1)});`,
+        `tl.fromTo("#intro-w${i}", { opacity: 0.16, y: 14, filter: "blur(6px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.3, ease: "power3.out" }, ${wordAt(i)});`,
     ),
-    `tl.fromTo("#intro-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: "expo.out" }, ${round(0.45 + words.length * 0.1)});`,
+    `tl.fromTo("#intro-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: "expo.out" }, ${round(after)});`,
     spec.intro.sub
-      ? `tl.fromTo("#intro-sub", { opacity: 0, filter: "blur(6px)" }, { opacity: 0.85, filter: "blur(0px)", duration: 0.24, ease: "power3.out" }, ${round(0.6 + words.length * 0.1)});`
+      ? `tl.fromTo("#intro-sub", { opacity: 0, filter: "blur(6px)" }, { opacity: 0.85, filter: "blur(0px)", duration: 0.3, ease: "power3.out" }, ${round(grid.beatAfter(after + 0.1))});`
       : "",
     // A slow push-in keeps a long voiced intro from sitting dead still.
     `tl.fromTo("#intro-headline", { scale: 0.98 }, { scale: 1.04, duration: ${round(D)}, ease: "none" }, 0);`,
@@ -455,19 +468,21 @@ function introHtml(ctx: Ctx, slot: Slot) {
 }
 
 function outroHtml(ctx: Ctx, slot: Slot) {
-  const { spec } = ctx;
+  const { spec, grid } = ctx;
   const D = slot.duration;
+  const b = grid.within(slot.start, slot.start + D); // beats from the outro's first frame
+  const on = (i: number, fallback: number) => b[i] ?? fallback;
   const host = spec.url.replace(/^https?:\/\//, "").replace(/\/$/, "");
   return card(ctx, "outro", D, `
       <h1 id="outro-headline" class="headline">${esc(spec.outro.headline)}</h1>
       ${spec.outro.cta ? `<div id="outro-cta" class="cta"><span id="outro-cta-shine" class="shine" data-layout-ignore></span>${esc(spec.outro.cta)}</div>` : ""}
       <div id="outro-url" class="url">${esc(host.startsWith("file:") ? spec.brand.name : host)}</div>`, [
     ...groundTweens("outro", slot),
-    `tl.fromTo("#outro-headline", { opacity: 0, y: 24, filter: "blur(10px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "expo.out" }, 0.3);`,
-    spec.outro.cta ? `tl.fromTo("#outro-cta", { opacity: 0, scale: 0.92 }, { opacity: 1, scale: 1, duration: 0.55, ease: "expo.out" }, 0.75);` : "",
-    spec.outro.cta ? `tl.fromTo("#outro-cta-shine", { x: -260 }, { x: 520, duration: 0.9, ease: "power2.inOut" }, 1.25);` : "",
+    `tl.fromTo("#outro-headline", { opacity: 0, y: 24, filter: "blur(10px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "expo.out" }, 0.05);`,
+    spec.outro.cta ? `tl.fromTo("#outro-cta", { opacity: 0, scale: 0.92 }, { opacity: 1, scale: 1, duration: 0.55, ease: "back.out(1.6)" }, ${on(1, 0.75)});` : "",
+    spec.outro.cta ? `tl.fromTo("#outro-cta-shine", { x: -260 }, { x: 520, duration: 0.9, ease: "power2.inOut" }, ${on(2, 1.25)});` : "",
     `tl.fromTo("#outro-headline", { scale: 0.98 }, { scale: 1.04, duration: ${round(D)}, ease: "none" }, 0);`,
-    `tl.fromTo("#outro-url", { opacity: 0 }, { opacity: 0.7, duration: 0.4, ease: "power2.out" }, 1.05);`,
+    `tl.fromTo("#outro-url", { opacity: 0 }, { opacity: 0.7, duration: 0.4, ease: "power2.out" }, ${on(2, 1.05)});`,
   ]);
 }
 
@@ -569,6 +584,7 @@ function audioTags(
   total: number,
   project: string,
   typing: { at: number; duration: number }[],
+  grid: Grid,
 ) {
   const tags: string[] = [];
   for (const slot of slots) {
@@ -576,14 +592,8 @@ function audioTags(
     if (v) tags.push(`<audio id="vo-${slot.id}" data-start="${round(slot.start + VO_LEAD)}" data-duration="${v.duration}" data-track-index="10" data-volume="1" src="${v.file}"></audio>`);
   }
 
-  if (spec.music) {
-    const src = resolve(specDir, spec.music);
-    mkdirSync(join(project, "assets", "music"), { recursive: true });
-    copyFileSync(src, join(project, "assets", "music", basename(src)));
-    tags.push(
-      `<audio id="music" data-timeline-role="music" data-start="0" data-duration="${total}" data-track-index="11" data-volume="${spec.musicVolume}" data-fade-in="0.4" data-fade-out="1.5" loop src="assets/music/${basename(src)}"></audio>`,
-    );
-  }
+  const music = resolveMusic(spec.music, specDir);
+  if (music) tags.push(musicTag(music, project, { total, volume: musicVolume(spec.musicVolume, spec.narration), mediaStart: grid.mediaStart }));
 
   const sfx = new Sfx(project);
   const place = sfx.place.bind(sfx);

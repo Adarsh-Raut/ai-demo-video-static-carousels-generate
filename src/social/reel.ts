@@ -5,8 +5,9 @@
 // pre-blurred backdrop of the same photo. Text stays inside the band Instagram and TikTok
 // leave clear (168–1330 px, left of the action rail); captions sit at the bottom of it.
 import { copyFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
-import { basename, join, resolve } from "node:path";
-import { esc, GSAP, Sfx } from "../media.ts";
+import { join, resolve } from "node:path";
+import { type Grid, snapper } from "../beats.ts";
+import { esc, GSAP, musicTag, musicVolume, resolveMusic, Sfx } from "../media.ts";
 import { probeDuration, readJson, round, run, workDir, writeJson } from "../util.ts";
 import { speak, type Word, wordTimings } from "../voice.ts";
 import { photoUrl } from "./listing.ts";
@@ -24,7 +25,9 @@ const CAP_BOTTOM = 1326; // captions grow upward from here, up to two lines
 
 type Line = { file: string; text: string; duration: number; words: Word[] };
 type VoiceMap = Record<string, Line>;
-type Slot = { scene: ReelScene; start: number; duration: number };
+type Slot = { scene: ReelScene; start: number; duration: number; last: boolean };
+// Scene-local beat tools: snap(t) moves a time onto a nearby beat, beat is its length.
+type Beat = { snap: (t: number, tolerance?: number) => number; beat: number };
 
 // ---------- assets ----------
 
@@ -72,6 +75,7 @@ export function reelVoice(spec: ReelSpec, { force = false } = {}): VoiceMap {
   const cache = existsSync(cachePath) ? readJson<VoiceMap & { _voice?: unknown }>(cachePath) : {};
   const sameVoice = JSON.stringify(cache._voice) === JSON.stringify(spec.voice);
   const out: VoiceMap = {};
+  if (!spec.narration) return out;
   for (const s of spec.scenes) {
     if (!s.narration.trim()) continue;
     const file = join(voDir, `${s.id}.wav`);
@@ -91,23 +95,15 @@ export function reelVoice(spec: ReelSpec, { force = false } = {}): VoiceMap {
 
 // ---------- compose ----------
 
-export function composeReel(spec: ReelSpec, specDir: string, vo: VoiceMap) {
+export function composeReel(spec: ReelSpec, specDir: string, vo: VoiceMap, grid: Grid) {
   const { project } = workDir(spec.id);
   mkdirSync(join(project, "compositions"), { recursive: true });
-  let t = 0;
-  const slots: Slot[] = spec.scenes.map((scene) => {
-    const v = vo[scene.id];
-    let d = Math.max(MIN[scene.kind], v ? LEAD + v.duration + TAIL : 0);
-    if (scene.kind === "tour") d = Math.max(d, scene.photos.length * 1.1);
-    if (scene.kind === "cta") d += END_HOLD;
-    const slot = { scene, start: round(t), duration: round(d) };
-    t += d;
-    return slot;
-  });
-  const total = round(t);
+  const slots = reelSlots(spec, vo, grid);
+  const total = round(slots.at(-1)!.start + slots.at(-1)!.duration);
   const sfx = new Sfx(project);
   slots.forEach((slot, i) => {
-    const html = sceneHtml(spec, slot, vo[slot.scene.id], (kind, at, vol, dur) => sfx.place(kind, slot.start + at, vol, dur));
+    const b: Beat = { snap: snapper(grid, slot.start), beat: grid.beat };
+    const html = sceneHtml(spec, slot, vo[slot.scene.id], (kind, at, vol, dur) => sfx.place(kind, slot.start + at, vol, dur), b);
     writeFileSync(join(project, "compositions", `${slot.scene.id}.html`), html);
     if (i > 0) sfx.place("whoosh", slot.start, 0.42);
   });
@@ -115,12 +111,8 @@ export function composeReel(spec: ReelSpec, specDir: string, vo: VoiceMap) {
   const audio = slots
     .filter((s) => vo[s.scene.id])
     .map((s) => `<audio id="vo-${s.scene.id}" data-start="${round(s.start + LEAD)}" data-duration="${vo[s.scene.id].duration}" data-track-index="10" data-volume="1" src="${vo[s.scene.id].file}"></audio>`);
-  if (spec.music) {
-    const src = resolve(specDir, spec.music);
-    mkdirSync(join(project, "assets", "music"), { recursive: true });
-    copyFileSync(src, join(project, "assets", "music", basename(src)));
-    audio.push(`<audio id="music" data-timeline-role="music" data-start="0" data-duration="${total}" data-track-index="11" data-volume="${spec.musicVolume}" data-fade-in="0.2" data-fade-out="1.2" loop src="assets/music/${basename(src)}"></audio>`);
-  }
+  const music = resolveMusic(spec.music, specDir);
+  if (music) audio.push(musicTag(music, project, { total, volume: musicVolume(spec.musicVolume, spec.narration), mediaStart: grid.mediaStart, fadeOut: 1.2 }));
   writeFileSync(join(project, "index.html"), indexHtml(spec, slots, total, [...audio, ...sfx.tags]));
   writeJson(join(project, "hyperframes.json"), {
     $schema: "https://hyperframes.heygen.com/schema/hyperframes.json",
@@ -133,9 +125,25 @@ export function composeReel(spec: ReelSpec, specDir: string, vo: VoiceMap) {
   return total;
 }
 
+// Scene lengths: long enough for the line (or the scene's minimum), then on to the next bar
+// line, so every cut lands on the music. Shared by compose and the storyboard.
+export function reelSlots(spec: ReelSpec, vo: VoiceMap, grid: Grid): Slot[] {
+  let t = 0;
+  return spec.scenes.map((scene, i) => {
+    const v = vo[scene.id];
+    let d = Math.max(MIN[scene.kind], v ? LEAD + v.duration + TAIL : 0);
+    if (scene.kind === "tour") d = Math.max(d, scene.photos.length * 1.1);
+    if (scene.kind === "cta") d += END_HOLD;
+    const end = grid.cutAfter(t + d);
+    const slot = { scene, start: round(t), duration: round(end - t), last: i === spec.scenes.length - 1 };
+    t = end;
+    return slot;
+  });
+}
+
 type Cue = (kind: "pop" | "impact" | "sparkle" | "whoosh" | "click", at: number, volume: number, duration?: number) => void;
 
-function sceneHtml(spec: ReelSpec, slot: Slot, vo: Line | undefined, cue: Cue) {
+function sceneHtml(spec: ReelSpec, slot: Slot, vo: Line | undefined, cue: Cue, b: Beat) {
   const { scene, duration: D } = slot;
   const id = scene.id;
   const parts = { html: [] as string[], tw: [] as string[] };
@@ -145,14 +153,15 @@ function sceneHtml(spec: ReelSpec, slot: Slot, vo: Line | undefined, cue: Cue) {
   };
 
   if (scene.kind === "cta") {
-    paperScene(spec, scene, D, cue, add);
+    paperScene(spec, scene, D, cue, add, b);
   } else {
     const photos = scene.kind === "tour" ? scene.photos : [scene.photo];
-    const slice = D / photos.length;
+    // Photo changes fall on beats; each photo overlaps the next by 0.3 s for its slide-in.
+    const cuts = photos.map((_, k) => (k ? b.snap((k * D) / photos.length, b.beat / 2) : 0));
+    const span = (k: number) => ({ start: cuts[k], dur: round(k === photos.length - 1 ? D - cuts[k] : cuts[k + 1] - cuts[k] + 0.3) });
     // Backdrop: the blurred photo, swapped with each cut, drifting slowly.
     photos.forEach((p, k) => {
-      const start = round(k * slice);
-      const dur = round(k === photos.length - 1 ? D - start : slice + 0.3);
+      const { start, dur } = span(k);
       add(
         `<div id="${id}-bg${k}" class="clip layer" data-start="${start}" data-duration="${dur}" style="z-index:${1 + k}"><img id="${id}-bg${k}-img" class="bg" data-layout-allow-overflow src="assets/photos/p${p}-bg.jpg" alt=""></div>`,
         k ? `tl.fromTo("#${id}-bg${k}-img", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power1.out" }, ${start});` : "",
@@ -165,16 +174,14 @@ function sceneHtml(spec: ReelSpec, slot: Slot, vo: Line | undefined, cue: Cue) {
     add(
       `<div id="${id}-card" class="card" style="top:${card.top}px; height:${card.h}px; z-index:10">${photos
         .map((p, k) => {
-          const start = round(k * slice);
-          const dur = round(k === photos.length - 1 ? D - start : slice + 0.3);
+          const { start, dur } = span(k);
           return `<div id="${id}-ph${k}" class="clip layer" data-start="${start}" data-duration="${dur}"><img id="${id}-ph${k}-img" class="photo" data-layout-allow-overflow src="assets/photos/p${p}.jpg" alt=""></div>`;
         })
         .join("")}</div>`,
       // The first scene's card is there from frame 0 (it is the thumbnail); later ones rise in.
       slot.start > 0 ? `tl.fromTo("#${id}-card", { y: 140, scale: 0.94, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.5, ease: "expo.out" }, 0);` : "",
       ...photos.flatMap((_, k) => {
-        const start = round(k * slice);
-        const dur = round(k === photos.length - 1 ? D - start : slice + 0.3);
+        const { start, dur } = span(k);
         const drift = k % 2 ? -1 : 1;
         return [
           k ? `tl.fromTo("#${id}-ph${k}-img", { xPercent: ${100 * drift} }, { xPercent: 0, duration: 0.38, ease: "power3.out" }, ${start});` : "",
@@ -182,15 +189,22 @@ function sceneHtml(spec: ReelSpec, slot: Slot, vo: Line | undefined, cue: Cue) {
         ];
       }),
     );
-    if (scene.kind === "tour") photos.forEach((_, k) => k && cue("whoosh", k * slice, 0.22));
+    if (scene.kind === "tour") photos.forEach((_, k) => k && cue("whoosh", cuts[k], 0.22));
 
-    if (scene.kind === "hook") hookText(spec, scene, add, cue);
-    if (scene.kind === "value") valuePanel(spec, scene, D, add, cue);
-    if (scene.kind === "tour") chips(scene, D, add, cue);
-    if (scene.kind === "auction") auctionTile(scene, D, add, cue);
+    if (scene.kind === "hook") hookText(spec, scene, add, cue, b);
+    if (scene.kind === "value") valuePanel(spec, scene, D, add, cue, b);
+    if (scene.kind === "tour") chips(scene, D, add, cue, b);
+    if (scene.kind === "auction") auctionTile(scene, D, add, cue, b);
   }
 
   if (spec.captions && vo && scene.kind !== "cta") captionsHtml(id, vo.words, D, spec.brand.highlight, add);
+
+  // The old scene leaves in the last ~0.3 s, so the cut (on a bar line) brings the next one
+  // in over a clean frame: no muddy crossfade between two busy layouts.
+  if (!slot.last) {
+    const outs = [...parts.html.join("").matchAll(new RegExp(`id="(${id}-(?:card|kicker|headline|pricerow|panel|badge|chip\\d+|tile))"`, "g"))].map((m) => `#${m[1]}`);
+    if (outs.length) parts.tw.push(`tl.to(${JSON.stringify(outs)}, { y: -60, opacity: 0, duration: 0.28, ease: "power2.in", stagger: 0.02 }, ${round(D - 0.34)});`);
+  }
 
   return `<template>
   <style>
@@ -214,31 +228,32 @@ type Of<K extends ReelScene["kind"]> = Extract<ReelScene, { kind: K }>;
 // One line of text, sized down until it fits the column at roughly `k` em per character.
 const fit = (text: string, width: number, max: number, k = 0.68) => Math.round(Math.min(max, width / (text.length * k)));
 
-function hookText(spec: ReelSpec, s: Of<"hook">, add: Add, cue: Cue) {
+function hookText(spec: ReelSpec, s: Of<"hook">, add: Add, cue: Cue, b: Beat) {
   const id = s.id;
   if (s.kicker) add(`<div id="${id}-kicker" class="kicker" style="top:196px">${esc(s.kicker)}</div>`, `tl.fromTo("#${id}-kicker", { x: -24 }, { x: 0, duration: 0.5, ease: "expo.out" }, 0);`);
   add(
     `<div id="${id}-headline" class="headline" style="top:272px; font-size:${fit(s.headline, COL.w, 136)}px">${esc(s.headline)}</div>`,
     `tl.fromTo("#${id}-headline", { scale: 1.06 }, { scale: 1, duration: 0.6, ease: "expo.out" }, 0);`,
   );
+  const hit = b.snap(0.4); // the price punches on a beat
   if (s.price) {
     add(
       `<div id="${id}-pricerow" class="pricerow" style="top:430px"><span class="pricelabel">${esc(s.priceLabel)}</span><span id="${id}-price" class="price">${esc(s.price)}</span></div>`,
       `tl.set("#${id}-price", { rotation: -2 }, 0);`,
-      `tl.to("#${id}-price", { scale: 1.16, duration: 0.12, ease: "power2.out" }, 0.35);`,
-      `tl.to("#${id}-price", { scale: 1, duration: 0.45, ease: "back.out(3)" }, 0.47);`,
+      `tl.to("#${id}-price", { scale: 1.16, duration: 0.12, ease: "power2.out" }, ${round(hit - 0.05)});`,
+      `tl.to("#${id}-price", { scale: 1, duration: 0.45, ease: "back.out(3)" }, ${round(hit + 0.07)});`,
     );
-    cue("impact", 0.4, 0.5);
+    cue("impact", hit, 0.5);
   }
   void spec;
 }
 
-function valuePanel(spec: ReelSpec, s: Of<"value">, D: number, add: Add, cue: Cue) {
+function valuePanel(spec: ReelSpec, s: Of<"value">, D: number, add: Add, cue: Cue, b: Beat) {
   const id = s.id;
   const money = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
-  const strikeAt = 0.55;
-  const countAt = 0.62;
-  const badgeAt = round(Math.min(2.2, D - 1.2));
+  const strikeAt = b.snap(0.55);
+  const countAt = round(strikeAt + 0.07);
+  const badgeAt = round(b.snap(Math.min(2.2, D - 1.2)) - 0.08); // lands (and hits) on the beat
   add(
     `<div id="${id}-panel" class="clip panel" data-start="0.2" data-duration="${round(D - 0.2)}" style="top:856px; height:304px">
       <div class="label">${esc(spec.brand.name.toUpperCase())} ESTIMATE</div>
@@ -260,10 +275,13 @@ function valuePanel(spec: ReelSpec, s: Of<"value">, D: number, add: Add, cue: Cu
   cue("impact", badgeAt + 0.08, 0.55);
 }
 
-function chips(s: Of<"tour">, D: number, add: Add, cue: Cue) {
-  const step = Math.min(0.5, (D - 1.4) / Math.max(1, s.chips.length));
+function chips(s: Of<"tour">, D: number, add: Add, cue: Cue, b: Beat) {
+  // One chip per beat (half-beats if they would not all fit), starting on the first beat.
+  const room = (D - 1.4) / Math.max(1, s.chips.length);
+  const step = b.beat <= room ? b.beat : b.beat / 2;
+  const first = b.snap(0.35, b.beat);
   s.chips.forEach((c, j) => {
-    const at = round(0.35 + j * step);
+    const at = round(first + j * step);
     const x = COL.x + (j % 2) * 462;
     const y = 870 + Math.floor(j / 2) * 144;
     add(
@@ -274,8 +292,9 @@ function chips(s: Of<"tour">, D: number, add: Add, cue: Cue) {
   });
 }
 
-function auctionTile(s: Of<"auction">, D: number, add: Add, cue: Cue) {
+function auctionTile(s: Of<"auction">, D: number, add: Add, cue: Cue, b: Beat) {
   const id = s.id;
+  const dateAt = b.snap(0.55);
   add(
     `<div id="${id}-tile" class="clip panel tile" data-start="0.25" data-duration="${round(D - 0.25)}" style="top:856px; height:304px">
       <div class="label accent"><span id="${id}-live" class="live"></span>${esc(s.label)}</div>
@@ -283,13 +302,15 @@ function auctionTile(s: Of<"auction">, D: number, add: Add, cue: Cue) {
       ${s.time ? `<div class="time">${esc(s.time)}</div>` : ""}
     </div>`,
     `tl.fromTo("#${id}-tile", { scale: 0.86, y: -24 }, { scale: 1, y: 0, duration: 0.5, ease: "expo.out" }, 0.25);`,
-    `tl.fromTo("#${id}-date", { scale: 1.25, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.45, ease: "expo.out" }, 0.55);`,
+    `tl.fromTo("#${id}-date", { scale: 1.25, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.45, ease: "expo.out" }, ${dateAt});`,
     `tl.fromTo("#${id}-live", { scale: 1, opacity: 1 }, { scale: 1.6, opacity: 0.35, duration: 0.6, ease: "sine.inOut", yoyo: true, repeat: 5 }, 0.3);`,
   );
-  cue("pop", 0.6, 0.35);
+  cue("pop", round(dateAt + 0.05), 0.35);
 }
 
-function paperScene(spec: ReelSpec, s: Of<"cta">, D: number, cue: Cue, add: Add) {
+function paperScene(spec: ReelSpec, s: Of<"cta">, D: number, cue: Cue, add: Add, b: Beat) {
+  const headAt = b.snap(0.4);
+  const buttonAt = b.snap(0.75);
   const id = s.id;
   add(
     `<div class="paper"></div><div id="${id}-orb0" class="orb" style="left:-260px; top:120px"></div><div id="${id}-orb1" class="orb" style="left:520px; top:1180px"></div>`,
@@ -304,16 +325,16 @@ function paperScene(spec: ReelSpec, s: Of<"cta">, D: number, cue: Cue, add: Add)
   );
   add(
     `<div id="${id}-headline" class="cta-headline">${esc(s.headline)}</div>`,
-    `tl.fromTo("#${id}-headline", { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.55, ease: "expo.out" }, 0.4);`,
+    `tl.fromTo("#${id}-headline", { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.55, ease: "expo.out" }, ${headAt});`,
   );
   add(
     `<div id="${id}-button" class="button"><span id="${id}-shine" class="shine" data-layout-ignore></span>${esc(s.button)}</div>`,
-    `tl.fromTo("#${id}-button", { scale: 0.8, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "back.out(2)" }, 0.7);`,
+    `tl.fromTo("#${id}-button", { scale: 0.8, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "back.out(2)" }, ${round(buttonAt - 0.05)});`,
     `tl.fromTo("#${id}-shine", { x: -300 }, { x: 760, duration: 0.9, ease: "power2.inOut" }, 1.2);`,
   );
   if (s.sub) add(`<div id="${id}-sub" class="cta-sub">${esc(s.sub)}</div>`, `tl.fromTo("#${id}-sub", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, 1.0);`);
   cue("sparkle", 0.2, 0.45);
-  cue("pop", 0.75, 0.3);
+  cue("pop", buttonAt, 0.3);
 }
 
 // Word-by-word captions: short groups that fit one line, the spoken word lit up.

@@ -22,7 +22,7 @@ export function voice(spec: Spec, { force = false } = {}): VoiceManifest {
 
   const manifest: VoiceManifest = {};
   for (const beat of beats(spec)) {
-    if (!beat.text?.trim()) {
+    if (!spec.narration || !beat.text?.trim()) {
       manifest[beat.id] = null;
       continue;
     }

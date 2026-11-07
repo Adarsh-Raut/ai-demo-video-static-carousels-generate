@@ -28,10 +28,32 @@ This writes `out/<id>/scout/site.json` (title, brand colours and font, sections,
 - **Clutter:** common cookie banners and chat widgets are hidden or declined automatically. List anything else under `hide`.
 - Give each scene 1–2 beats with callouts. More reads as busy.
 
-## 3. Build
+## Storyboard first: nothing is made until the user approves it
+
+Every video starts with a storyboard. The build refuses to record or render until a storyboard exists for that exact spec and these media options (`--yes` skips this only when the user explicitly says not to review).
+
+1. Make it (command below). It writes `out/<id>/storyboard.md`: a table with each scene's time, what's on screen, the motion, the sound and the narration. It also gives the music's tempo and confirms that cuts land on bar lines.
+2. Show it to the user: paste the table into your reply. Mention the media options they can change: music (the default track, their own file, or none) and narration (on or off).
+3. Wait for their approval. If they ask for changes, edit the spec, make the storyboard again and show it again. Build only after a clear yes.
+
+**Media options**, on any command:
+- `--music <file>` uses their own track; `--music default` uses the bundled bed.
+- `--no-music` means no music.
+- `--no-voice` means no narration, and the music comes up to carry the film.
+- Or set `"music"` (`"default"`, a path relative to the spec, or `false`) and `"narration"` (`true`/`false`) in the spec.
+
+The music is beat-tracked locally (`py/beats.py`) and the film starts on its first downbeat. Scene cuts land on bar lines (or the next beat when a bar is far off), and key entrances and sound accents land on beats. The old scene leaves in the last ~0.3 s before each cut and the new one arrives on the beat.
 
 ```bash
-npm run demo -- all demos/<id>.json --quality draft            # voice → record → compose → check → render
+npm run demo -- storyboard demos/<id>.json [--no-voice] [--music <file> | --no-music]
+```
+
+Times are estimates until the site is recorded. The recorder runs each scene on to the next bar line, and clicks and keystrokes start on a beat.
+
+## 3. Build (after approval)
+
+```bash
+npm run demo -- all demos/<id>.json --quality draft            # voice → record → compose → check → render (same media flags as the storyboard)
 npm run demo -- all demos/<id>.json --engine say --voice Samantha --quality draft   # if the Kokoro model isn't downloaded
 ```
 
@@ -61,4 +83,4 @@ The project in `out/<id>/project` is plain HyperFrames HTML. Load `/hyperframes`
 npm run demo -- render demos/<id>.json --quality standard    # → out/<id>/<id>.mp4
 ```
 
-Measure it with `npx hyperframes audio out/<id>/<id>.mp4 --json` (about −14 LUFS, no clipping), and say it was measured, not listened to. Without a music file the film has no music. Say so, and mention `"music": "../audio/music/<file>"`.
+Measure it with `npx hyperframes audio out/<id>/<id>.mp4 --json` (about −14 LUFS, no clipping), and say it was measured, not listened to. With the default music, the post must credit it: `Music: "Wallpaper" by Kevin MacLeod (incompetech.com), CC BY 4.0`.
