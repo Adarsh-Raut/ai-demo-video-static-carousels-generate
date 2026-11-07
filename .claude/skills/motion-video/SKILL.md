@@ -22,6 +22,7 @@ The code is in `src/motion/` and the specs are in `motion/<id>.json` (schema in 
 | `value` | Headline plus a number rolling from the estimate to the starting bid. The cursor drags a bar; the labels and badge appear once it settles. |
 | `bid` | Headline, current bid and countdown. The cursor presses the button on a beat, the bid rolls up, and a toast lands. |
 | `checks` | Headline, then one checklist row per beat. |
+| `hop` | A ball hops card to card, one landing per listed beat (put them on the track's hop or whoop sounds); the card it lands on lights up. The flood grows out of the ball. |
 | `flood` | White words on a full accent background. |
 | `end` | Logo, headline and URL, held past the last bar line (`tail`). |
 
