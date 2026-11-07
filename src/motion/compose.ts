@@ -37,7 +37,7 @@ export function motionSlots(spec: MotionSpec, grid: Grid): Slot[] {
 export async function prepareMotionAssets(spec: MotionSpec, specDir: string, { force = false } = {}) {
   const { project } = workDir(spec.id);
   mkdirSync(join(project, "assets", "photos"), { recursive: true });
-  const photos = spec.scenes.flatMap((s) => (s.kind === "search" ? s.cards.map((c) => c.photo) : []));
+  const photos = spec.scenes.flatMap((s) => (s.kind === "search" || s.kind === "hop" ? s.cards.map((c) => c.photo) : []));
   for (const [i, src] of photos.entries()) {
     const dest = join(project, "assets", "photos", `c${i}.jpg`);
     if (!force && existsSync(dest)) continue;
@@ -73,7 +73,7 @@ export function composeMotion(spec: MotionSpec, music: string | null, grid: Grid
   let photoN = 0;
   slots.forEach((slot) => {
     const first = photoN;
-    if (slot.scene.kind === "search") photoN += slot.scene.cards.length;
+    if (slot.scene.kind === "search" || slot.scene.kind === "hop") photoN += slot.scene.cards.length;
     const ctx: Ctx = {
       spec,
       slot,
@@ -107,7 +107,7 @@ type Parts = { html: string[]; tw: string[] };
 function sceneHtml(ctx: Ctx) {
   const { scene, duration: D } = ctx.slot;
   const p: Parts = { html: [], tw: [] };
-  const builders: Record<MotionScene["kind"], (ctx: Ctx, p: Parts) => void> = { lines, logo, search, value, bid, checks, flood, end };
+  const builders: Record<MotionScene["kind"], (ctx: Ctx, p: Parts) => void> = { lines, logo, search, value, bid, checks, hop, flood, end };
   builders[scene.kind](ctx, p);
   const bg = scene.kind === "flood" ? ctx.spec.brand.accent : ctx.spec.brand.paper;
   return `<template>
@@ -297,6 +297,93 @@ function checks({ spec, slot, cue }: Ctx, p: Parts) {
   });
 }
 
+// Card row and ball geometry of a hop scene (also where its flood dot starts: on the ball).
+function hopGeometry(s: Extract<MotionScene, { kind: "hop" }>) {
+  const n = s.cards.length;
+  const gap = 70;
+  const cw = Math.min(440, Math.floor((W - 2 * 200 - (n - 1) * gap) / n));
+  const ch = Math.round(cw * 1.25);
+  const x0 = Math.round((W - (n * cw + (n - 1) * gap)) / 2);
+  const top = 400;
+  const R = 38;
+  const restY = top - R * 2 + 6; // the ball's top when it sits on a card
+  return { n, gap, cw, ch, x0, top, R, restY, cx: (k: number) => x0 + k * (cw + gap) + cw / 2 };
+}
+
+function hop({ spec, slot, cue, photo }: Ctx, p: Parts) {
+  const s = slot.scene as Extract<MotionScene, { kind: "hop" }>;
+  const b = slot.beats;
+  const id = s.id;
+  const accent = spec.brand.accent;
+  const at = (beat: number) => beatAt(b, beat, beat * 0.5);
+  // Headlines swap on their beats, each replacing the last.
+  s.headlines.forEach((h, i) => {
+    const hid = `${id}-h${i}`;
+    p.html.push(`<div id="${hid}" class="center-line head" style="top:64px; font-size:${fit(h.text, 1500, 110)}px">${esc(h.text)}</div>`);
+    p.tw.push(enter(`#${hid}`, at(h.beat) + (h.beat === 0 ? 0.04 : -0.02), { y: 26, blur: 10, dur: 0.28 }));
+    const next = s.headlines[i + 1];
+    if (next) p.tw.push(`tl.set("#${hid}", { opacity: 0 }, ${round(at(next.beat))});`);
+  });
+  // Cards in a row, big.
+  const { gap, cw, ch, x0, top, R, restY, cx } = hopGeometry(s);
+  s.cards.forEach((c, k) => {
+    p.html.push(`<div id="${id}-k${k}" class="card hopcard" style="left:${x0 + k * (cw + gap)}px; top:${top}px; width:${cw}px; height:${ch}px">
+      <img src="${photo(k)}" alt=""><div class="shade"></div>
+      <div class="meta" data-layout-ignore><div class="place" style="font-size:${fit(c.place, cw - 48, 36, 0.56)}px">${esc(c.place)}</div><div class="facts" style="font-size:${fit(c.facts, cw - 48, 25, 0.5)}px">${esc(c.facts)}</div>
+      <div class="price"><small>${esc(c.label)}</small> <span id="${id}-p${k}" class="pill">${esc(c.price)}</span></div></div>
+      <div id="${id}-ring${k}" class="ring" style="border-color:${accent}"></div></div>`);
+    p.tw.push(`tl.fromTo("#${id}-k${k}", { y: 60, opacity: 0, scale: 0.94 }, { y: 0, opacity: 1, scale: 1, duration: 0.42, ease: "back.out(1.6)" }, ${round(0.06 + k * 0.08)});`);
+  });
+  // The ball: drops in for the first landing, then arcs from card to card. Squash on each
+  // landing, stretch in the air; the landed card dips and its price lights up, others dim.
+  p.html.push(`<div id="${id}-ball" class="ball" style="left:0; top:0; width:${R * 2}px; height:${R * 2}px; background:${accent}"></div>`);
+  const lands = s.hops.map((h) => at(h.beat));
+  const flightOf = (i: number) => (i ? round(Math.min(0.42, (lands[i] - lands[i - 1]) * 0.8)) : 0.36);
+  let prev: { x: number; t: number } | undefined;
+  s.hops.forEach((h, i) => {
+    const land = lands[i];
+    const x = round(cx(h.card) - R);
+    const flight = flightOf(i);
+    // The settle after a landing must finish before the next take-off.
+    const settle = i < s.hops.length - 1 ? round(Math.max(0.08, Math.min(0.35, lands[i + 1] - flightOf(i + 1) - (land + 0.07) - 0.01))) : 0.35;
+    const off = round(land - flight);
+    const ball = `#${id}-ball`;
+    if (!prev) {
+      p.tw.push(`tl.set("${ball}", { x: ${x}, y: ${restY - 520}, scaleX: 0.85, scaleY: 1.2, opacity: 1 }, ${round(off - 0.001)});`);
+      p.tw.push(`tl.to("${ball}", { y: ${restY}, duration: ${flight}, ease: "power2.in" }, ${off});`);
+    } else {
+      const peak = restY - 140; // a low arc that stays clear of the headline
+      p.tw.push(
+        `tl.to("${ball}", { x: ${x}, duration: ${flight}, ease: "none" }, ${off});`,
+        `tl.to("${ball}", { y: ${peak}, duration: ${round(flight / 2)}, ease: "power2.out" }, ${off});`,
+        `tl.to("${ball}", { y: ${restY}, duration: ${round(flight / 2)}, ease: "power2.in" }, ${round(off + flight / 2)});`,
+        `tl.to("${ball}", { scaleX: 0.86, scaleY: 1.18, duration: 0.1, ease: "power2.out" }, ${off});`,
+      );
+    }
+    // Landing: squash and settle, ripple, card dips, price lights up, the others dim.
+    p.tw.push(
+      `tl.to("${ball}", { scaleX: 1.35, scaleY: 0.68, duration: 0.07, ease: "power2.out" }, ${round(land)});`,
+      `tl.to("${ball}", { scaleX: 1, scaleY: 1, duration: ${settle}, ease: "${settle >= 0.3 ? "elastic.out(1, 0.45)" : "power2.out"}" }, ${round(land + 0.07)});`,
+      `tl.fromTo("#${id}-rip${i}", { scale: 0.3, opacity: 0.9 }, { scale: 2.4, opacity: 0, duration: 0.55, ease: "power2.out", immediateRender: false }, ${round(land)});`,
+      `tl.to("#${id}-k${h.card}", { y: 18, duration: 0.08, ease: "power2.out" }, ${round(land)});`,
+      `tl.to("#${id}-k${h.card}", { y: 0, duration: 0.4, ease: "back.out(3)" }, ${round(land + 0.08)});`,
+      ...s.cards.map((_, k) => `tl.to("#${id}-k${k}", { opacity: ${k === h.card ? 1 : 0.42}, scale: ${k === h.card ? 1.04 : 0.97}, duration: 0.18, ease: "power2.out" }, ${round(land)});`),
+      ...s.cards.map((_, k) =>
+        k === h.card
+          ? `tl.to("#${id}-p${k}", { backgroundColor: "${accent}", scale: 1.08, duration: 0.15, ease: "power2.out" }, ${round(land)});`
+          : `tl.to("#${id}-p${k}", { backgroundColor: "rgba(0,0,0,0)", scale: 1, duration: 0.15 }, ${round(land)});`,
+      ),
+    );
+    p.html.push(`<div id="${id}-rip${i}" class="ripple" style="left:${round(cx(h.card) - 60)}px; top:${restY + R * 2 - 20}px; border-color:${accent}"></div>`);
+    cue("pop", land, 0.12);
+    prev = { x, t: land };
+    // The last landing picks the card: a ring settles round it.
+    if (i === s.hops.length - 1) {
+      p.tw.push(`tl.fromTo("#${id}-ring${h.card}", { opacity: 0, scale: 1.08 }, { opacity: 1, scale: 1, duration: 0.3, ease: "power3.out" }, ${round(land + 0.04)});`);
+    }
+  });
+}
+
 function flood({ slot, cue }: Ctx, p: Parts) {
   const s = slot.scene as Extract<MotionScene, { kind: "flood" }>;
   const b = slot.beats;
@@ -346,7 +433,7 @@ function floodHtml(spec: MotionSpec, slots: Slot[], total: number) {
     const appear = round(cut - beat);
     const intoFlood = slot.scene.kind === "flood"; // the new scene is accent already: no hole
     const fromFlood = prev.scene.kind === "flood"; // the old scene is accent already: no dot
-    const dot = DOT_AT[prev.scene.kind] ?? { x: W / 2, y: H / 2 };
+    const dot = dotFor(prev.scene);
     const end = round(cut + (intoFlood ? 0.05 : 0.42));
     html.push(`<div id="fl${k}" class="clip fl" data-start="${appear}" data-duration="${round(end - appear)}" data-layout-ignore data-layout-allow-overflow>
       ${fromFlood ? "" : `<div id="fl${k}-dot" class="fdot" style="left:${dot.x - 30}px; top:${dot.y - 30}px; background:${accent}"></div>`}
@@ -396,6 +483,15 @@ function floodHtml(spec: MotionSpec, slots: Slot[], total: number) {
 `;
 }
 
+function dotFor(scene: MotionScene) {
+  if (scene.kind === "hop") {
+    // The ball itself swells into the flood, as hop's frog does.
+    const g = hopGeometry(scene);
+    return { x: g.cx(scene.hops.at(-1)!.card), y: g.restY + g.R };
+  }
+  return DOT_AT[scene.kind] ?? { x: W / 2, y: H / 2 };
+}
+
 // Where the dot appears in each kind of scene: somewhere empty, near what just happened.
 const DOT_AT: Partial<Record<MotionScene["kind"], { x: number; y: number }>> = {
   lines: { x: W / 2, y: 760 },
@@ -404,6 +500,7 @@ const DOT_AT: Partial<Record<MotionScene["kind"], { x: number; y: number }>> = {
   value: { x: 460, y: 620 },
   bid: { x: W / 2, y: 960 },
   checks: { x: W / 2, y: 900 },
+  hop: { x: W / 2, y: 960 },
 };
 
 // ---------- look ----------
@@ -459,6 +556,12 @@ function styles(spec: MotionSpec) {
     .toast { position: absolute; width: 460px; padding: 26px 32px; border-radius: 20px; background: #fff; box-shadow: 0 0 0 1px #e5e7eb, 0 24px 60px rgba(17,24,39,.14);
       display: flex; align-items: center; gap: 18px; font-size: 40px; font-weight: 600; white-space: nowrap; }
     .tick { width: 54px; height: 54px; border-radius: 50%; background: #16a34a; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 32px; }
+    .hopcard { overflow: visible; }
+    .hopcard img, .hopcard .shade { border-radius: 22px; }
+    .pill { display: inline-block; padding: 2px 12px; border-radius: 12px; }
+    .ring { position: absolute; inset: -12px; border: 6px solid; border-radius: 30px; opacity: 0; }
+    .ball { position: absolute; border-radius: 50%; opacity: 0; z-index: 40; box-shadow: 0 18px 30px rgba(12,75,234,.35); transform-origin: 50% 100%; }
+    .ripple { position: absolute; width: 120px; height: 40px; border: 5px solid; border-radius: 50%; opacity: 0; z-index: 39; }
     .row { position: absolute; left: 560px; display: flex; align-items: center; gap: 28px; font-size: 60px; font-weight: 500; letter-spacing: -.03em; white-space: nowrap; }
     .dot { width: 64px; height: 64px; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 36px; flex: none; }`;
 }

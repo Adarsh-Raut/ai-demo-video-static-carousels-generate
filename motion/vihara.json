@@ -8,20 +8,133 @@
   "music": "../out/.music/hop-launch.m4a",
   "musicOffset": 0.356,
   "scenes": [
-    { "id": "no", "kind": "lines", "bars": 1, "lines": ["No courthouse.", "No paperwork.", "No guesswork."] },
-    { "id": "brand", "kind": "logo", "bars": 1, "tagline": "Bank-owned homes. Bid online." },
     {
-      "id": "ask", "kind": "search", "bars": 2, "headline": "Ask.", "query": "3-bed homes under $200k",
-      "cards": [
-        { "photo": "https://res.cloudinary.com/drm9blcmj/image/upload/v1792317626/vihara/properties/401-rensselaer-ave-ogdensburg/g30kmpbylyuf1uylq1kn.jpg", "place": "Ogdensburg, NY", "facts": "3 bd · 1.5 ba · 2,048 sq ft", "price": "$25,000" },
-        { "photo": "https://res.cloudinary.com/drm9blcmj/image/upload/v1791283655/vihara/properties/2529-2531-e-monument-st-baltimore/wyewdfo774egbjixe1wp.jpg", "place": "Baltimore, MD", "facts": "3 bd · 1 ba · 2,363 sq ft", "price": "$58,687" },
-        { "photo": "https://res.cloudinary.com/drm9blcmj/image/upload/v1791283767/vihara/properties/703-59th-ave-capitol-heights/wuraqv8i5oabga0rtjb3.jpg", "place": "Capitol Heights, MD", "facts": "3 bd · 1 ba · 1,180 sq ft", "price": "$126,753" }
+      "id": "no",
+      "kind": "lines",
+      "bars": 1,
+      "lines": [
+        "No courthouse.",
+        "No paperwork.",
+        "No guesswork."
       ]
     },
-    { "id": "check", "kind": "value", "bars": 2, "headline": "Check.", "estimate": 155118, "price": 126753, "badge": "18% below estimate" },
-    { "id": "bid", "kind": "bid", "bars": 2, "headline": "Bid.", "from": 126753, "to": 127753 },
-    { "id": "know", "kind": "checks", "bars": 2, "headline": "Know before you bid.", "items": ["Estimated value on every listing", "All buyer fees upfront", "Bid remotely, in real time"] },
-    { "id": "online", "kind": "flood", "bars": 1, "words": ["Online.", "14 live auctions."] },
-    { "id": "end", "kind": "end", "bars": 1, "headline": "Just bid.", "url": "vihara.ai" }
+    {
+      "id": "brand",
+      "kind": "logo",
+      "bars": 1,
+      "tagline": "Bank-owned homes. Bid online."
+    },
+    {
+      "id": "ask",
+      "kind": "search",
+      "bars": 3,
+      "headline": "Ask.",
+      "query": "3-bed homes under $200k",
+      "cards": [
+        {
+          "photo": "https://res.cloudinary.com/drm9blcmj/image/upload/v1792317626/vihara/properties/401-rensselaer-ave-ogdensburg/g30kmpbylyuf1uylq1kn.jpg",
+          "place": "Ogdensburg, NY",
+          "facts": "3 bd · 1.5 ba · 2,048 sq ft",
+          "price": "$25,000"
+        },
+        {
+          "photo": "https://res.cloudinary.com/drm9blcmj/image/upload/v1791283655/vihara/properties/2529-2531-e-monument-st-baltimore/wyewdfo774egbjixe1wp.jpg",
+          "place": "Baltimore, MD",
+          "facts": "3 bd · 1 ba · 2,363 sq ft",
+          "price": "$58,687"
+        },
+        {
+          "photo": "https://res.cloudinary.com/drm9blcmj/image/upload/v1791283767/vihara/properties/703-59th-ave-capitol-heights/wuraqv8i5oabga0rtjb3.jpg",
+          "place": "Capitol Heights, MD",
+          "facts": "3 bd · 1 ba · 1,180 sq ft",
+          "price": "$126,753"
+        }
+      ]
+    },
+    {
+      "id": "browse",
+      "kind": "hop",
+      "bars": 2,
+      "headlines": [
+        {
+          "text": "Browse.",
+          "beat": 0
+        },
+        {
+          "text": "14 live auctions.",
+          "beat": 4
+        },
+        {
+          "text": "Pick one.",
+          "beat": 7
+        }
+      ],
+      "cards": [
+        {
+          "photo": "https://res.cloudinary.com/drm9blcmj/image/upload/v1792317626/vihara/properties/401-rensselaer-ave-ogdensburg/g30kmpbylyuf1uylq1kn.jpg",
+          "place": "Ogdensburg, NY",
+          "facts": "3 bd · 1.5 ba · 2,048 sq ft",
+          "price": "$25,000"
+        },
+        {
+          "photo": "https://res.cloudinary.com/drm9blcmj/image/upload/v1791283655/vihara/properties/2529-2531-e-monument-st-baltimore/wyewdfo774egbjixe1wp.jpg",
+          "place": "Baltimore, MD",
+          "facts": "3 bd · 1 ba · 2,363 sq ft",
+          "price": "$58,687"
+        },
+        {
+          "photo": "https://res.cloudinary.com/drm9blcmj/image/upload/v1791283767/vihara/properties/703-59th-ave-capitol-heights/wuraqv8i5oabga0rtjb3.jpg",
+          "place": "Capitol Heights, MD",
+          "facts": "3 bd · 1 ba · 1,180 sq ft",
+          "price": "$126,753"
+        }
+      ],
+      "hops": [
+        {
+          "beat": 2,
+          "card": 0
+        },
+        {
+          "beat": 4,
+          "card": 1
+        },
+        {
+          "beat": 5,
+          "card": 2
+        },
+        {
+          "beat": 6,
+          "card": 1
+        },
+        {
+          "beat": 7,
+          "card": 2
+        }
+      ]
+    },
+    {
+      "id": "check",
+      "kind": "value",
+      "bars": 2,
+      "headline": "Check.",
+      "estimate": 155118,
+      "price": 126753,
+      "badge": "18% below estimate"
+    },
+    {
+      "id": "bid",
+      "kind": "bid",
+      "bars": 2,
+      "headline": "Bid.",
+      "from": 126753,
+      "to": 127753
+    },
+    {
+      "id": "end",
+      "kind": "end",
+      "bars": 1,
+      "headline": "Just bid.",
+      "url": "vihara.ai"
+    }
   ]
 }

@@ -48,6 +48,15 @@ const Scene = z.discriminatedUnion("kind", [
   }),
   // Headline + checklist rows, one per beat.
   z.object({ ...base, kind: z.literal("checks"), headline: z.string(), items: z.array(z.string()).min(1).max(5) }),
+  // A ball hops card to card, one landing per listed beat (put them on the track's hop
+  // sounds); the card it lands on dips and lights up, the rest dim. Headlines swap on beats.
+  z.object({
+    ...base,
+    kind: z.literal("hop"),
+    headlines: z.array(z.object({ text: z.string(), beat: z.number().int().min(0) })).min(1),
+    cards: z.array(Card).min(2).max(4),
+    hops: z.array(z.object({ beat: z.number().int().min(0), card: z.number().int().min(0) })).min(1),
+  }),
   // Full accent background, one big word or short line per step.
   z.object({ ...base, kind: z.literal("flood"), words: z.array(z.string()).min(1).max(4) }),
   // End card: logo, headline, URL, small print. Held to the end.
