@@ -8,7 +8,7 @@ import { check, render } from "../render.ts";
 import { stills } from "../social/boards.ts";
 import { type BoardRow, fingerprint, requireBoard, writeBoard } from "../storyboard.ts";
 import { ROOT, round } from "../util.ts";
-import { composeMotion, motionSlots, prepareMotionAssets } from "./compose.ts";
+import { composeMotion, frameOf, motionSlots, prepareMotionAssets } from "./compose.ts";
 import { loadMotion, type MotionScene } from "./spec.ts";
 
 const [target, ...flags] = process.argv.slice(2);
@@ -52,7 +52,7 @@ if (!build || yes) {
     {
       id: spec.id,
       kind: "Motion video",
-      format: "1920×1080, 30 fps",
+      format: `${frameOf(spec.format)}, 30 fps`,
       music,
       bpm: music ? round(grid.bpm, 1) : undefined,
       narration: false,

@@ -114,8 +114,11 @@ def main():
     phase = int(np.argmax([low[frames[p::4]].mean() if len(frames[p::4]) else 0 for p in range(4)]))
     times = frames / FPS + NFFT / 2 / SR  # a frame's flux peaks half a window before the attack
     # skip silence at the very start: the first beat must have some energy
-    rms = np.sqrt(np.convolve(x**2, np.ones(HOP) / HOP, mode="same"))[::HOP]
-    floor = 0.05 * rms.max()
+    # Loudness over ~0.2 s windows, compared with the track's typical level (95th percentile),
+    # so one sharp hit can't make the rest of the track look like silence.
+    win = int(0.2 * SR)
+    rms = np.sqrt(np.convolve(x**2, np.ones(win) / win, mode="same"))[::HOP]
+    floor = 0.1 * np.percentile(rms, 95)
     keep = [i for i, f in enumerate(frames) if rms[min(f, len(rms) - 1)] > floor]
     first = keep[0] if keep else 0
     beats = times[first:]

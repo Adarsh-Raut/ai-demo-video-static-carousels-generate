@@ -15,7 +15,9 @@ export function render(id: string, { quality = "standard" } = {}) {
   run(HF, ["render", "-o", raw, "--quality", quality, "--video-frame-format", "png"], { cwd: project });
   run("ffmpeg", [
     "-y", "-v", "error", "-i", raw,
-    "-af", "loudnorm=I=-14:TP=-1:LRA=11",
+    // loudnorm works at 192 kHz and can overshoot its ceiling; resample to 48 kHz first, then
+    // limit, so the AAC file stays at about -1 dBTP (measured -1.1 dBTP at -14 LUFS).
+    "-af", "loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000,alimiter=limit=0.71:level=false:attack=1:release=50", "-ar", "48000",
     "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", final,
   ]);
   console.log(`render  → ${final}`);

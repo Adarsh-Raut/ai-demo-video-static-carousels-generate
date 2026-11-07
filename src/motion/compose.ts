@@ -13,15 +13,26 @@ import { photoUrl } from "../social/listing.ts";
 import { round, workDir, writeJson } from "../util.ts";
 import type { MotionScene, MotionSpec } from "./spec.ts";
 
-const W = 1920;
-const H = 1080;
-const X0 = 150; // left margin
-const X1 = W - 150; // right margin
+// Frame size and margins, set per film by composeMotion (landscape or vertical).
+let W = 1920;
+let H = 1080;
+let V = false; // vertical (1080×1920)
+let X0 = 150; // left margin
+let X1 = W - 150; // right margin
+function setFormat(format: MotionSpec["format"]) {
+  V = format === "vertical";
+  W = V ? 1080 : 1920;
+  H = V ? 1920 : 1080;
+  X0 = V ? 70 : 150;
+  X1 = W - X0;
+}
+export const frameOf = (format: MotionSpec["format"]) => (format === "vertical" ? "1080×1920" : "1920×1080");
 
 export type Slot = { scene: MotionScene; start: number; duration: number; beats: number[] };
 
 // Scene k starts on bar line sum(bars before k).
 export function motionSlots(spec: MotionSpec, grid: Grid): Slot[] {
+  setFormat(spec.format);
   let bar = 0;
   return spec.scenes.map((scene, i) => {
     const start = grid.bars[bar];
@@ -61,10 +72,11 @@ export async function prepareMotionAssets(spec: MotionSpec, specDir: string, { f
 
 // ---------- compose ----------
 
-type Cue = (kind: "click" | "whoosh" | "typing" | "pop" | "impact" | "sparkle", at: number, volume: number, duration?: number) => void;
+type Cue = (kind: "click" | "whoosh" | "typing" | "pop" | "impact" | "sparkle" | "whoop", at: number, volume: number, duration?: number) => void;
 type Ctx = { spec: MotionSpec; slot: Slot; cue: Cue; photo: (n: number) => string };
 
 export function composeMotion(spec: MotionSpec, music: string | null, grid: Grid) {
+  setFormat(spec.format);
   const { project } = workDir(spec.id);
   mkdirSync(join(project, "compositions"), { recursive: true });
   const slots = motionSlots(spec, grid);
@@ -145,7 +157,7 @@ function lines({ slot, cue }: Ctx, p: Parts) {
     const id = `${s.id}-l${i}`;
     const at = beatAt(b, i, i * 0.5);
     const next = i < s.lines.length - 1 ? beatAt(b, i + 1, (i + 1) * 0.5) : undefined;
-    p.html.push(`<div id="${id}" class="center big" style="font-size:${fit(line, 1500, 150)}px">${esc(line)}</div>`);
+    p.html.push(`<div id="${id}" class="center big" style="font-size:${fit(line, V ? 940 : 1500, V ? 140 : 150)}px">${esc(line)}</div>`);
     // The film's first line is already up at frame 0: it is the thumbnail.
     p.tw.push(slot.start === 0 && i === 0 ? "" : enter(`#${id}`, at, { y: 24, blur: 10, dur: 0.24 }));
     if (next !== undefined) p.tw.push(`tl.set("#${id}", { opacity: 0 }, ${round(next)});`);
@@ -178,11 +190,12 @@ function search({ slot, cue, photo }: Ctx, p: Parts) {
   const s = slot.scene as Extract<MotionScene, { kind: "search" }>;
   const b = slot.beats;
   const id = s.id;
-  headline(id, s.headline, `left:${X0}px; top:300px; font-size:${fit(s.headline, 520, 190)}px`, p);
+  headline(id, s.headline, V ? `left:0; right:0; text-align:center; top:330px; font-size:${fit(s.headline, 940, 200)}px` : `left:${X0}px; top:300px; font-size:${fit(s.headline, 520, 190)}px`, p);
   // The search bar (the site's own: placeholder, magnifier), typing the query.
-  const bar = { x: 700, y: 236, w: X1 - 700 };
+  const bar = V ? { x: X0, y: 600, w: X1 - X0 } : { x: 700, y: 236, w: X1 - 700 };
   const typeFrom = beatAt(b, 1, 0.5);
-  const step = 1 / 20; // 20 characters a second
+  // 20 characters a second, faster if needed so typing is done by beat 3 (cards then drop).
+  const step = Math.min(1 / 20, Math.max(1 / 40, (beatAt(b, 3, 1.5) - beatAt(b, 1, 0.5) - 0.12) / Math.max(1, [...s.query].length)));
   const chars = [...s.query];
   p.html.push(`<div id="${id}-bar" class="sbar" style="left:${bar.x}px; top:${bar.y}px; width:${bar.w}px">
       <span id="${id}-ph" class="ph" data-layout-ignore>Describe your ideal home, or enter a city or zip</span>
@@ -198,13 +211,16 @@ function search({ slot, cue, photo }: Ctx, p: Parts) {
   const go = slot.beats.find((t) => t >= typed + 0.05) ?? typed + 0.2;
   p.tw.push(`tl.to("#${id}-bar", { scale: 0.985, duration: 0.07, ease: "power2.out", yoyo: true, repeat: 1 }, ${round(go)});`);
   cue("click", go, 0.4);
-  const cw = Math.round((bar.w - 2 * 40) / 3);
+  const cgap = V ? 24 : 40;
+  const cw = Math.round((bar.w - 2 * cgap) / 3);
+  const ctop = V ? 780 : 410;
+  const chh = V ? 500 : 440;
   s.cards.forEach((c, i) => {
     const at = slot.beats.find((t) => t >= go + i * (b[1] ?? 0.5) - 0.02) ?? go + i * 0.5; // first card on the Enter beat
-    p.html.push(`<div id="${id}-k${i}" class="card" style="left:${bar.x + i * (cw + 40)}px; top:410px; width:${cw}px; height:440px">
+    p.html.push(`<div id="${id}-k${i}" class="card" style="left:${bar.x + i * (cw + cgap)}px; top:${ctop}px; width:${cw}px; height:${chh}px">
       <img src="${photo(i)}" alt=""><div class="shade"></div>
       <div class="meta" data-layout-ignore><div class="place" style="font-size:${fit(c.place, cw - 48, 34, 0.56)}px">${esc(c.place)}</div><div class="facts" style="font-size:${fit(c.facts, cw - 48, 24, 0.5)}px">${esc(c.facts)}</div>
-      <div class="price"><small>${esc(c.label)}</small> ${esc(c.price)}</div></div></div>`);
+      <div class="price" style="font-size:${fit(`${c.label} ${c.price}`, cw - 60, 38, 0.5)}px"><small>${esc(c.label)}</small> ${esc(c.price)}</div></div></div>`);
     p.tw.push(`tl.fromTo("#${id}-k${i}", { y: -70, opacity: 0, scale: 0.94 }, { y: 0, opacity: 1, scale: 1, duration: 0.42, ease: "back.out(1.7)" }, ${round(at - 0.06)});`);
     cue("pop", at, 0.3);
   });
@@ -216,11 +232,12 @@ function value({ spec, slot, cue }: Ctx, p: Parts) {
   const id = s.id;
   const ratio = s.price / s.estimate;
   const money = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
-  headline(id, s.headline, `left:${X0}px; top:200px; font-size:190px`, p);
-  // The number top right rolls from the estimate down to the starting bid.
-  p.html.push(`<div id="${id}-num" class="num" style="right:${W - X1}px; top:200px">${money(s.estimate)}</div>`);
+  headline(id, s.headline, V ? `left:0; right:0; text-align:center; top:360px; font-size:200px` : `left:${X0}px; top:200px; font-size:190px`, p);
+  // The number (top right; centred under the headline when vertical) rolls from the
+  // estimate down to the starting bid.
+  p.html.push(`<div id="${id}-num" class="num" style="${V ? "left:0; right:0; text-align:center; top:620px; font-size:160px" : `right:${W - X1}px; top:200px`}">${money(s.estimate)}</div>`);
   p.tw.push(enter(`#${id}-num`, 0.1));
-  const bar = { x: X0, y: 520, w: X1 - X0, h: 200 };
+  const bar = V ? { x: X0, y: 900, w: X1 - X0, h: 200 } : { x: X0, y: 520, w: X1 - X0, h: 200 };
   const dragFrom = beatAt(b, 1, 0.6);
   const dragTo = beatAt(b, 3, dragFrom + 1.1);
   p.html.push(`<div id="${id}-bar" class="vbar" style="left:${bar.x}px; top:${bar.y}px; width:${bar.w}px; height:${bar.h}px">
@@ -230,7 +247,7 @@ function value({ spec, slot, cue }: Ctx, p: Parts) {
     <div id="${id}-rest" class="vlab right" style="right:${W - X1}px; top:${bar.y + bar.h + 34}px; bottom:auto"><b>${esc(s.estimateLabel)}</b><span>${money(s.estimate)}</span></div>
     <div id="${id}-handle" class="handle" style="left:${bar.x + bar.w - 14}px; top:${bar.y + 40}px"></div>
     <div id="${id}-cursor" class="cursor" style="left:${bar.x + bar.w}px; top:${bar.y + 100}px">${CURSOR}</div>
-    <div id="${id}-badge" class="badge" style="right:${round(W - (bar.x + bar.w * ratio))}px; top:${bar.y + bar.h + 34}px">${esc(s.badge)}</div>`);
+    <div id="${id}-badge" class="badge" style="${V ? `left:${X0}px; top:${bar.y + bar.h + 150}px` : `right:${round(W - (bar.x + bar.w * ratio))}px; top:${bar.y + bar.h + 34}px`}">${esc(s.badge)}</div>`);
   p.tw.push(enter(`#${id}-bar`, 0.12, { y: 30, blur: 8 }));
   p.tw.push(`tl.fromTo("#${id}-cursor", { x: 120, y: 160, opacity: 0 }, { x: 0, y: 0, opacity: 1, duration: 0.4, ease: "power2.out" }, ${round(dragFrom - 0.45)});`);
   p.tw.push(`tl.fromTo("#${id}-handle", { opacity: 0 }, { opacity: 1, duration: 0.2 }, ${round(dragFrom - 0.3)});`);
@@ -258,13 +275,14 @@ function bid({ slot, cue }: Ctx, p: Parts) {
   const id = s.id;
   const D = slot.duration;
   const money = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
-  headline(id, s.headline, `left:0; right:0; text-align:center; top:120px; font-size:190px`, p);
-  p.html.push(`<div id="${id}-lab" class="center-line muted" style="top:400px; font-size:40px">${esc(s.label)}</div>
-    <div id="${id}-now" class="center-line num ink" style="top:450px">${money(s.from)}</div>
-    <div id="${id}-ends" class="center-line muted" style="top:640px; font-size:38px">Ends in <span id="${id}-clock" class="mono">${clock(s.ends)}</span></div>
-    <div id="${id}-btn" class="button" style="left:${W / 2 - 200}px; top:750px">${esc(s.button)}</div>
-    <div id="${id}-cursor" class="cursor" style="left:${W / 2 + 120}px; top:800px">${CURSOR}</div>
-    <div id="${id}-toast" class="toast" style="left:${W - 150 - 460}px; top:96px"><span class="tick">✓</span>${esc(s.toast)}</div>`);
+  const by = V ? { head: 360, lab: 700, now: 760, ends: 960, btn: 1100, toast: 1320 } : { head: 120, lab: 400, now: 450, ends: 640, btn: 750, toast: 96 };
+  headline(id, s.headline, `left:0; right:0; text-align:center; top:${by.head}px; font-size:${V ? 200 : 190}px`, p);
+  p.html.push(`<div id="${id}-lab" class="center-line muted" style="top:${by.lab}px; font-size:${V ? 44 : 40}px">${esc(s.label)}</div>
+    <div id="${id}-now" class="center-line num ink" style="top:${by.now}px">${money(s.from)}</div>
+    <div id="${id}-ends" class="center-line muted" style="top:${by.ends}px; font-size:${V ? 42 : 38}px">Ends in <span id="${id}-clock" class="mono">${clock(s.ends)}</span></div>
+    <div id="${id}-btn" class="button" style="left:${W / 2 - 200}px; top:${by.btn}px">${esc(s.button)}</div>
+    <div id="${id}-cursor" class="cursor" style="left:${W / 2 + 120}px; top:${by.btn + 50}px">${CURSOR}</div>
+    <div id="${id}-toast" class="toast" style="left:${V ? W / 2 - 230 : W - 150 - 460}px; top:${by.toast}px"><span class="tick">✓</span>${esc(s.toast)}</div>`);
   p.tw.push(enter(`#${id}-lab`, beatAt(b, 1, 0.5) - 0.3, { y: 12, blur: 6 }), enter(`#${id}-now`, beatAt(b, 1, 0.5) - 0.24), enter(`#${id}-ends`, beatAt(b, 1, 0.5)), enter(`#${id}-btn`, beatAt(b, 2, 1), { y: 20, blur: 8 }));
   // Countdown, one tick a second.
   p.tw.push(`const ${camel(id)}C = { s: ${s.ends} };`, `tl.to(${camel(id)}C, { s: ${s.ends - Math.floor(D)}, duration: ${round(D)}, ease: "none", onUpdate: () => { const v = Math.ceil(${camel(id)}C.s); document.querySelector("#${id}-clock").textContent = String(Math.floor(v / 3600)).padStart(2, "0") + ":" + String(Math.floor(v % 3600 / 60)).padStart(2, "0") + ":" + String(v % 60).padStart(2, "0"); } }, 0);`);
@@ -288,10 +306,10 @@ function checks({ spec, slot, cue }: Ctx, p: Parts) {
   const s = slot.scene as Extract<MotionScene, { kind: "checks" }>;
   const b = slot.beats;
   const id = s.id;
-  headline(id, s.headline, `left:0; right:0; text-align:center; top:200px; font-size:${fit(s.headline, 1600, 130)}px`, p);
+  headline(id, s.headline, `left:0; right:0; text-align:center; top:${V ? 300 : 200}px; font-size:${fit(s.headline, V ? 940 : 1600, 130)}px`, p);
   s.items.forEach((item, i) => {
     const at = beatAt(b, i + 1, 0.5 + i * 0.5);
-    p.html.push(`<div id="${id}-i${i}" class="row" style="top:${440 + i * 120}px"><span class="dot" style="background:${spec.brand.accent}">✓</span>${esc(item)}</div>`);
+    p.html.push(`<div id="${id}-i${i}" class="row" style="top:${V ? 640 + i * 130 : 440 + i * 120}px"><span class="dot" style="background:${spec.brand.accent}">✓</span>${esc(item)}</div>`);
     p.tw.push(enter(`#${id}-i${i}`, at - 0.04, { y: 20, blur: 8, dur: 0.32 }));
     cue("pop", at, 0.28);
   });
@@ -300,12 +318,12 @@ function checks({ spec, slot, cue }: Ctx, p: Parts) {
 // Card row and ball geometry of a hop scene (also where its flood dot starts: on the ball).
 function hopGeometry(s: Extract<MotionScene, { kind: "hop" }>) {
   const n = s.cards.length;
-  const gap = 70;
-  const cw = Math.min(440, Math.floor((W - 2 * 200 - (n - 1) * gap) / n));
-  const ch = Math.round(cw * 1.25);
+  const gap = V ? 24 : 70;
+  const cw = V ? Math.floor((X1 - X0 - (n - 1) * gap) / n) : Math.min(440, Math.floor((W - 2 * 200 - (n - 1) * gap) / n));
+  const ch = Math.round(cw * (V ? 1.45 : 1.25));
   const x0 = Math.round((W - (n * cw + (n - 1) * gap)) / 2);
-  const top = 400;
-  const R = 38;
+  const top = V ? 840 : 400;
+  const R = V ? 34 : 38;
   const restY = top - R * 2 + 6; // the ball's top when it sits on a card
   return { n, gap, cw, ch, x0, top, R, restY, cx: (k: number) => x0 + k * (cw + gap) + cw / 2 };
 }
@@ -319,7 +337,7 @@ function hop({ spec, slot, cue, photo }: Ctx, p: Parts) {
   // Headlines swap on their beats, each replacing the last.
   s.headlines.forEach((h, i) => {
     const hid = `${id}-h${i}`;
-    p.html.push(`<div id="${hid}" class="center-line head" style="top:64px; font-size:${fit(h.text, 1500, 110)}px">${esc(h.text)}</div>`);
+    p.html.push(`<div id="${hid}" class="center-line head" style="top:${V ? 380 : 64}px; font-size:${fit(h.text, V ? 940 : 1500, V ? 120 : 110)}px">${esc(h.text)}</div>`);
     p.tw.push(enter(`#${hid}`, at(h.beat) + (h.beat === 0 ? 0.04 : -0.02), { y: 26, blur: 10, dur: 0.28 }));
     const next = s.headlines[i + 1];
     if (next) p.tw.push(`tl.set("#${hid}", { opacity: 0 }, ${round(at(next.beat))});`);
@@ -330,7 +348,7 @@ function hop({ spec, slot, cue, photo }: Ctx, p: Parts) {
     p.html.push(`<div id="${id}-k${k}" class="card hopcard" style="left:${x0 + k * (cw + gap)}px; top:${top}px; width:${cw}px; height:${ch}px">
       <img src="${photo(k)}" alt=""><div class="shade"></div>
       <div class="meta" data-layout-ignore><div class="place" style="font-size:${fit(c.place, cw - 48, 36, 0.56)}px">${esc(c.place)}</div><div class="facts" style="font-size:${fit(c.facts, cw - 48, 25, 0.5)}px">${esc(c.facts)}</div>
-      <div class="price"><small>${esc(c.label)}</small> <span id="${id}-p${k}" class="pill">${esc(c.price)}</span></div></div>
+      <div class="price" style="font-size:${fit(`${c.label} ${c.price}`, cw - 80, 38, 0.5)}px"><small>${esc(c.label)}</small> <span id="${id}-p${k}" class="pill">${esc(c.price)}</span></div></div>
       <div id="${id}-ring${k}" class="ring" style="border-color:${accent}"></div></div>`);
     p.tw.push(`tl.fromTo("#${id}-k${k}", { y: 60, opacity: 0, scale: 0.94 }, { y: 0, opacity: 1, scale: 1, duration: 0.42, ease: "back.out(1.6)" }, ${round(0.06 + k * 0.08)});`);
   });
@@ -375,7 +393,7 @@ function hop({ spec, slot, cue, photo }: Ctx, p: Parts) {
       ),
     );
     p.html.push(`<div id="${id}-rip${i}" class="ripple" style="left:${round(cx(h.card) - 60)}px; top:${restY + R * 2 - 20}px; border-color:${accent}"></div>`);
-    cue("pop", land, 0.12);
+    cue("whoop", land, 0.55); // our own hop sound, peaking on the landing
     prev = { x, t: land };
     // The last landing picks the card: a ring settles round it.
     if (i === s.hops.length - 1) {
@@ -392,7 +410,7 @@ function flood({ slot, cue }: Ctx, p: Parts) {
     const id = `${s.id}-w${i}`;
     const at = beatAt(b, i * every, i * 0.8);
     const next = i < s.words.length - 1 ? beatAt(b, (i + 1) * every, (i + 1) * 0.8) : undefined;
-    p.html.push(`<div id="${id}" class="center big" style="color:#fff; font-size:${fit(w, 1600, 280)}px">${esc(w)}</div>`);
+    p.html.push(`<div id="${id}" class="center big" style="color:#fff; font-size:${fit(w, V ? 940 : 1600, 280)}px">${esc(w)}</div>`);
     p.tw.push(enter(`#${id}`, at + 0.02, { y: 30, blur: 14, dur: 0.3, scale: 1.06 }));
     if (next !== undefined) p.tw.push(`tl.set("#${id}", { opacity: 0 }, ${round(next)});`);
     cue("impact", at + 0.02, 0.3);
@@ -407,9 +425,10 @@ function end({ spec, slot, cue }: Ctx, p: Parts) {
     p.html.push(`<img id="${id}-logo" class="endlogo" src="assets/logo.png" alt="${esc(spec.brand.name)}">`);
     p.tw.push(enter(`#${id}-logo`, 0.02, { y: 0, scale: 0.9, blur: 12, dur: 0.45 }));
   }
-  p.html.push(`<div id="${id}-head" class="center-line ink" style="top:430px; font-size:190px; font-weight:500; letter-spacing:-.05em">${esc(s.headline)}</div>
-    <div id="${id}-url" class="center-line muted" style="top:680px; font-size:44px">${esc(s.url)}</div>
-    ${s.sub ? `<div id="${id}-sub" class="center-line muted" style="top:745px; font-size:30px; opacity:.8">${esc(s.sub)}</div>` : ""}`);
+  const ey = V ? { head: 800, url: 1050, sub: 1115 } : { head: 430, url: 680, sub: 745 };
+  p.html.push(`<div id="${id}-head" class="center-line ink" style="top:${ey.head}px; font-size:190px; font-weight:500; letter-spacing:-.05em">${esc(s.headline)}</div>
+    <div id="${id}-url" class="center-line muted" style="top:${ey.url}px; font-size:${V ? 50 : 44}px">${esc(s.url)}</div>
+    ${s.sub ? `<div id="${id}-sub" class="center-line muted" style="top:${ey.sub}px; font-size:30px; opacity:.8">${esc(s.sub)}</div>` : ""}`);
   // Headline on the downbeat (out of the flood), then URL and small print a beat apart.
   p.tw.push(enter(`#${id}-head`, 0.06), enter(`#${id}-url`, beatAt(b, 1, 0.5), { y: 12, blur: 6 }));
   if (s.sub) p.tw.push(enter(`#${id}-sub`, beatAt(b, 2, 1), { y: 10, blur: 6 }));
@@ -489,11 +508,21 @@ function dotFor(scene: MotionScene) {
     const g = hopGeometry(scene);
     return { x: g.cx(scene.hops.at(-1)!.card), y: g.restY + g.R };
   }
-  return DOT_AT[scene.kind] ?? { x: W / 2, y: H / 2 };
+  return (V ? DOT_AT_V : DOT_AT)()[scene.kind] ?? { x: W / 2, y: H / 2 };
 }
 
 // Where the dot appears in each kind of scene: somewhere empty, near what just happened.
-const DOT_AT: Partial<Record<MotionScene["kind"], { x: number; y: number }>> = {
+type Dots = () => Partial<Record<MotionScene["kind"], { x: number; y: number }>>;
+// Vertical: below each scene's content, above the bottom caption area.
+const DOT_AT_V: Dots = () => ({
+  lines: { x: W / 2, y: 1250 },
+  logo: { x: W / 2, y: 1220 },
+  search: { x: W / 2, y: 1420 },
+  value: { x: W / 2, y: 1480 },
+  bid: { x: W / 2, y: 1560 },
+  checks: { x: W / 2, y: 1300 },
+});
+const DOT_AT: Dots = () => ({
   lines: { x: W / 2, y: 760 },
   logo: { x: W / 2, y: 820 },
   search: { x: 430, y: 760 },
@@ -501,7 +530,7 @@ const DOT_AT: Partial<Record<MotionScene["kind"], { x: number; y: number }>> = {
   bid: { x: W / 2, y: 960 },
   checks: { x: W / 2, y: 900 },
   hop: { x: W / 2, y: 960 },
-};
+});
 
 // ---------- look ----------
 
@@ -524,10 +553,10 @@ function styles(spec: MotionSpec) {
     .num { position: absolute; font-size: 170px; font-weight: 500; letter-spacing: -.05em; line-height: 1; color: ${accent}; white-space: nowrap; font-variant-numeric: tabular-nums; }
     .center-line.num { position: absolute; color: ${ink}; }
     .mono { font-variant-numeric: tabular-nums; color: ${ink}; font-weight: 600; }
-    .logo { position: absolute; left: ${W / 2 - 340}px; top: 360px; width: 680px; }
+    .logo { position: absolute; left: ${W / 2 - (V ? 310 : 340)}px; top: ${V ? 720 : 360}px; width: ${V ? 620 : 680}px; }
     .wordmark { font-size: 200px; font-weight: 600; text-align: center; }
-    .tagline { position: absolute; left: 0; right: 0; top: 640px; text-align: center; font-size: 46px; color: ${muted}; }
-    .endlogo { position: absolute; left: ${W / 2 - 160}px; top: 300px; width: 320px; }
+    .tagline { position: absolute; left: 0; right: 0; top: ${V ? 960 : 640}px; text-align: center; font-size: ${V ? 50 : 46}px; color: ${muted}; }
+    .endlogo { position: absolute; left: ${W / 2 - 160}px; top: ${V ? 640 : 300}px; width: 320px; }
     .sbar { position: absolute; height: 110px; border-radius: 16px; background: #fff; box-shadow: 0 0 0 2px #dfe3ea, 0 18px 50px rgba(17,24,39,.08);
       display: flex; align-items: center; padding: 0 40px; font-size: 40px; }
     .ph { position: absolute; left: 40px; color: #4b5563; white-space: nowrap; }
@@ -542,7 +571,7 @@ function styles(spec: MotionSpec) {
     .place { font-size: 34px; font-weight: 600; letter-spacing: -.01em; }
     .facts { font-size: 24px; opacity: .9; margin-top: 4px; }
     .price { font-size: 38px; font-weight: 700; margin-top: 10px; }
-    .price small { font-size: 22px; font-weight: 500; opacity: .85; }
+    .price small { font-size: .58em; font-weight: 500; opacity: .85; }
     .vbar { position: absolute; border-radius: 30px; background: #e9ebf0; overflow: hidden; }
     .vfill { position: absolute; inset: 0; background: ${accent}; transform-origin: 0 50%; }
     .vlab { position: absolute; bottom: 30px; display: flex; flex-direction: column; gap: 6px; font-size: 32px; white-space: nowrap; }
@@ -562,7 +591,7 @@ function styles(spec: MotionSpec) {
     .ring { position: absolute; inset: -12px; border: 6px solid; border-radius: 30px; opacity: 0; }
     .ball { position: absolute; border-radius: 50%; opacity: 0; z-index: 40; box-shadow: 0 18px 30px rgba(12,75,234,.35); transform-origin: 50% 100%; }
     .ripple { position: absolute; width: 120px; height: 40px; border: 5px solid; border-radius: 50%; opacity: 0; z-index: 39; }
-    .row { position: absolute; left: 560px; display: flex; align-items: center; gap: 28px; font-size: 60px; font-weight: 500; letter-spacing: -.03em; white-space: nowrap; }
+    .row { position: absolute; left: ${V ? 90 : 560}px; display: flex; align-items: center; gap: 28px; font-size: 60px; font-weight: 500; letter-spacing: -.03em; white-space: nowrap; }
     .dot { width: 64px; height: 64px; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 36px; flex: none; }`;
 }
 

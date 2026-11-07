@@ -66,6 +66,9 @@ export type MotionScene = z.infer<typeof Scene>;
 
 export const MotionSpec = z.object({
   id: z.string().regex(/^[a-z0-9-]+$/),
+  // landscape 1920×1080, or vertical 1080×1920 for Reels / Shorts / TikTok (key content kept
+  // between ~250 and ~1500 px and clear of the right-hand action rail).
+  format: z.enum(["landscape", "vertical"]).default("landscape"),
   brand: z
     .object({
       name: z.string(),

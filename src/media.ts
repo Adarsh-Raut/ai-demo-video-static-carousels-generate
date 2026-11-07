@@ -8,11 +8,12 @@ export const GSAP = "https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js";
 
 export const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
-export type SfxKind = "click" | "whoosh" | "typing" | "pop" | "impact" | "sparkle";
-const SFX_KINDS: SfxKind[] = ["click", "whoosh", "typing", "pop", "impact", "sparkle"];
+export type SfxKind = "click" | "whoosh" | "typing" | "pop" | "impact" | "sparkle" | "whoop";
+const SFX_KINDS: SfxKind[] = ["click", "whoosh", "typing", "pop", "impact", "sparkle", "whoop"];
 // Seconds from file start to the loudest sample, measured on the files in audio/sfx.
-const PEAK: Record<SfxKind, number> = { click: 0.073, whoosh: 0.162, typing: 0, pop: 0.12, impact: 0.073, sparkle: 0.025 };
-const LANE: Record<SfxKind, number> = { click: 12, whoosh: 13, pop: 14, typing: 15, impact: 16, sparkle: 17 };
+// whoop: our own synthesised hop (py/whoop.py), peaking where its rising glide tops out.
+const PEAK: Record<SfxKind, number> = { click: 0.073, whoosh: 0.162, typing: 0, pop: 0.12, impact: 0.073, sparkle: 0.025, whoop: 0.17 };
+const LANE: Record<SfxKind, number> = { click: 12, whoosh: 13, pop: 14, typing: 15, impact: 16, sparkle: 17, whoop: 18 };
 
 type Take = { src: string; duration: number };
 
@@ -20,8 +21,8 @@ type Take = { src: string; duration: number };
 // frame after its picture (light before sound). Takes rotate per kind so repeats differ.
 export class Sfx {
   readonly tags: string[] = [];
-  private takes: Record<SfxKind, Take[]> = { click: [], whoosh: [], typing: [], pop: [], impact: [], sparkle: [] };
-  private used: Record<SfxKind, number> = { click: 0, whoosh: 0, typing: 0, pop: 0, impact: 0, sparkle: 0 };
+  private takes: Record<SfxKind, Take[]> = { click: [], whoosh: [], typing: [], pop: [], impact: [], sparkle: [], whoop: [] };
+  private used: Record<SfxKind, number> = { click: 0, whoosh: 0, typing: 0, pop: 0, impact: 0, sparkle: 0, whoop: 0 };
 
   constructor(project: string) {
     const lib = join(ROOT, "audio", "sfx");
