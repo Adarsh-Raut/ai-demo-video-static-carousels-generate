@@ -144,3 +144,36 @@ For more, use the HyperFrames registry (shader transitions, kinetic type, stat c
 ## Never used
 
 HeyGen voices, music or cloud rendering; `hyperframes auth`, `publish`, `cloud`, `lambda`, `cloudrun`; `audio --quality best`; vision captioning in `capture`. These can cost money or need an account.
+
+## Branches
+
+| Branch | What it is | Status |
+| --- | --- | --- |
+| `main` | The pipeline: demo videos, listing reels, carousels, beat sync, music and narration options, storyboard before build | the working base |
+| `motion-video` | `main` plus **motion videos**: launch films made from redrawn UI, modelled on the hop launch video | experimental, built on `main` |
+| `try-brag` | A one-off test of the open-source [/brag](https://github.com/latent-spaces/brag) skill on vihara.ai | experiment, branched before beat sync; not meant to merge |
+
+```bash
+git switch motion-video   # or try-brag / main
+npm install               # after switching, in case dependencies differ
+```
+
+### motion-video: launch films from redrawn UI
+
+`npm run motion -- motion/vihara.json` builds the film and writes its storyboard with a still per scene. `--render` makes the video once the storyboard is approved. Each scene is:
+- a short headline ("Ask." "Check." "Bid.")
+- one UI moment: a search bar typing, cards dropping, a value bar the cursor drags, a bid button press, a checklist
+
+Every scene is a whole number of bars of the music, so every cut lands on a bar line. Between scenes, a blue dot floods the frame and opens on the bar line. `motion/vihara.json` uses real listing data and site copy. The code is in `src/motion/`; see the branch's README and `.claude/skills/motion-video/SKILL.md`.
+
+Music: `motion/vihara.json` points at `out/.music/hop-launch.m4a`, the soundtrack extracted from the hop video for study only. It's git-ignored and not in the repo, and its licence is unknown, so don't post a video that uses it. Render with `--music <licensed track>`, and make a new storyboard, before publishing.
+
+### try-brag: the /brag experiment
+
+This branch copies [latent-spaces/brag](https://github.com/latent-spaces/brag) (MIT, commit `669ab92`) into `.claude/skills/brag` and `.claude/skills/brag-slim`. It also keeps the plan, share copy and HyperFrames composition of a 22 s vihara.ai launch video made with `/brag-slim` (in `brag-output/`). What we took from it into `main` and `motion-video`:
+- cuts on bar lines
+- the old scene leaves before the beat and the new one arrives on it
+- a storyboard before anything is built
+- redrawn real UI instead of screenshots
+
+The brag skill's bundled music is "Happy Beats / Business Moves" by Sascha Ende ([ende.app](https://ende.app/en), CC BY 4.0). Its sound effects are by [Kenney](https://kenney.nl/) (CC0).

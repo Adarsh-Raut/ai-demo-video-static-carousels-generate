@@ -3,3 +3,6 @@ out/
 .media/
 .DS_Store
 py/.venv/
+
+# Output of the /brag experiment (see the try-brag branch)
+brag-output*/
