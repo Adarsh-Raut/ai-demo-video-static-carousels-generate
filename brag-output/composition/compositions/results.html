@@ -1,0 +1,36 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Inter", sans-serif; color: #111827; }
+    #kicker { position: absolute; left: 220px; top: 236px; font-size: 30px; font-weight: 600; color: #0c4bea; }
+    #title { position: absolute; left: 220px; top: 282px; font-size: 64px; font-weight: 600; letter-spacing: -.035em; white-space: nowrap; }
+    #title b { font-weight: 600; color: #0c4bea; }
+    .stat { position: absolute; top: 470px; width: 440px; }
+    #s0 { left: 220px; } #s1 { left: 740px; } #s2 { left: 1260px; }
+    .num { font-size: 150px; font-weight: 600; letter-spacing: -.05em; line-height: 1; white-space: nowrap; }
+    .num b { font-weight: 600; color: #0c4bea; }
+    .rule { height: 4px; background: #e5e7eb; margin: 28px 0 26px; position: relative; overflow: hidden; border-radius: 2px; }
+    .rule i { position: absolute; inset: 0; background: #0c4bea; transform-origin: 0 50%; }
+    .lab { font-size: 32px; line-height: 1.3; color: #4b5563; }
+  </style>
+  <div id="root" data-composition-id="results" data-width="1920" data-height="1080">
+  <div id="kicker">Key results</div>
+  <div id="title"><b>Win smarter</b> in auctions</div>
+  <div class="stat" id="s0"><div class="num"><span id="n0">92</span><b>%</b></div><div class="rule"><i id="u0"></i></div><div class="lab">of bidders gain clarity on property risk</div></div>
+  <div class="stat" id="s1"><div class="num"><span id="n1">3</span><b>x</b></div><div class="rule"><i id="u1"></i></div><div class="lab">more likely to bid on high&#8209;ROI deals</div></div>
+  <div class="stat" id="s2"><div class="num"><span id="n2">30</span><b> min</b></div><div class="rule"><i id="u2"></i></div><div class="lab">to onboard and start bidding</div></div>
+  <script>
+    window.__timelines = window.__timelines || {};
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#kicker", { y: 14, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, ease: "power2.out" }, 0.0);
+    tl.fromTo("#title", { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "power3.out" }, 0.05);
+    [92, 3, 30].forEach((v, i) => {
+      const t = 0.5 + i * 0.5, c = { v: 0 }, el = document.getElementById("n" + i);
+      tl.fromTo("#s" + i, { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: "power3.out" }, t - 0.1);
+      tl.fromTo(c, { v: 0 }, { v, duration: 0.6, ease: "power2.out", onUpdate: () => { el.textContent = Math.round(c.v); } }, t - 0.1);
+      tl.fromTo("#u" + i, { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: "power3.out" }, t);
+    });
+    tl.to(["#kicker", "#title", "#s0", "#s1", "#s2"], { y: -30, opacity: 0, duration: 0.28, ease: "power2.in", stagger: 0.03 }, 4.55);
+    window.__timelines["results"] = tl;
+  </script>
+  </div>
+</template>

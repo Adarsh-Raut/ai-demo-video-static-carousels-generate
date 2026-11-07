@@ -1,0 +1,81 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Inter", sans-serif; color: #111827; }
+    #kicker { position: absolute; left: 0; right: 0; top: 118px; text-align: center; font-size: 28px; font-weight: 600; color: #0c4bea; }
+    #title { position: absolute; left: 0; right: 0; top: 162px; text-align: center; font-size: 68px; font-weight: 600; letter-spacing: -.035em; white-space: nowrap; }
+    #bar { position: absolute; left: 410px; top: 284px; width: 1100px; height: 100px; border-radius: 12px; background: #fff;
+      box-shadow: 0 0 0 1.5px #d7dbe3, 0 14px 40px rgba(17,24,39,.08); display: flex; align-items: center; padding: 0 36px; font-size: 36px; }
+    #ph { position: absolute; left: 36px; color: #4b5563; white-space: nowrap; }
+    #typed { white-space: nowrap; color: #111827; }
+    .ch { display: none; }
+    #caret { display: inline-block; width: 3px; height: 42px; background: #0c4bea; margin-left: 3px; vertical-align: -8px; }
+    #icon { position: absolute; right: 30px; top: 30px; width: 40px; height: 40px; }
+    #row { position: absolute; left: 0; right: 0; top: 452px; display: flex; justify-content: center; gap: 44px; }
+    .card { position: relative; width: 360px; height: 456px; border-radius: 20px; overflow: hidden; background: #1f2937;
+      box-shadow: 0 24px 60px rgba(17,24,39,.20), 0 0 0 1px rgba(17,24,39,.06); }
+    .card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 38%, rgba(0,0,0,.88) 100%); }
+    .meta { position: absolute; left: 24px; right: 20px; bottom: 22px; color: #fff; white-space: nowrap; }
+    .city { font-size: 32px; font-weight: 600; letter-spacing: -.01em; }
+    .facts { font-size: 24px; opacity: .92; margin-top: 4px; }
+    .val { font-size: 36px; font-weight: 700; margin-top: 10px; }
+    .val small { font-size: 22px; font-weight: 500; opacity: .9; }
+  </style>
+  <div id="root" data-composition-id="ask" data-width="1920" data-height="1080">
+  <div id="kicker">Ask Vihara AI</div>
+  <div id="title">Describe the deal you want.</div>
+  <div id="bar"><div id="ph" data-layout-ignore>Describe your ideal home, or enter a city or zip</div><div id="typed" data-layout-ignore><span class="ch" id="c0">A</span><span class="ch" id="c1">u</span><span class="ch" id="c2">c</span><span class="ch" id="c3">t</span><span class="ch" id="c4">i</span><span class="ch" id="c5">o</span><span class="ch" id="c6">n</span><span class="ch" id="c7">&nbsp;</span><span class="ch" id="c8">h</span><span class="ch" id="c9">o</span><span class="ch" id="c10">m</span><span class="ch" id="c11">e</span><span class="ch" id="c12">s</span><span class="ch" id="c13">&nbsp;</span><span class="ch" id="c14">i</span><span class="ch" id="c15">n</span><span class="ch" id="c16">&nbsp;</span><span class="ch" id="c17">N</span><span class="ch" id="c18">e</span><span class="ch" id="c19">w</span><span class="ch" id="c20">&nbsp;</span><span class="ch" id="c21">O</span><span class="ch" id="c22">r</span><span class="ch" id="c23">l</span><span class="ch" id="c24">e</span><span class="ch" id="c25">a</span><span class="ch" id="c26">n</span><span class="ch" id="c27">s</span><span id="caret"></span></div>
+    <svg id="icon" viewBox="0 0 256 256" fill="#111827"><path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"/></svg></div>
+  <div id="row"><div class="card" id="k0"><img src="assets/photos/1983-law-st-new-orleans.jpg" alt=""><div class="shade"></div>
+  <div class="meta"><div class="city">New Orleans, LA</div><div class="facts">4 bd · 2 ba · 1,400 sq ft</div><div class="val">$156,115 <small>est. value</small></div></div></div><div class="card" id="k1"><img src="assets/photos/1977-law-st-new-orleans.jpg" alt=""><div class="shade"></div>
+  <div class="meta"><div class="city">New Orleans, LA</div><div class="facts">3 bd · 2 ba · 1,421 sq ft</div><div class="val">$153,860 <small>est. value</small></div></div></div><div class="card" id="k2"><img src="assets/photos/2508-12-s-prieur-st-new-orleans.jpg" alt=""><div class="shade"></div>
+  <div class="meta"><div class="city">New Orleans, LA</div><div class="facts">10 bd · 6 ba · 3,822 sq ft</div><div class="val">$277,157 <small>est. value</small></div></div></div></div>
+  <script>
+    window.__timelines = window.__timelines || {};
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#kicker", { y: 14, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, ease: "power2.out" }, 0.0);
+    tl.fromTo("#title", { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "power3.out" }, 0.05);
+    tl.fromTo("#bar", { y: 30, opacity: 0, scale: 0.97 }, { y: 0, opacity: 1, scale: 1, duration: 0.42, ease: "power3.out" }, 0.1);
+    tl.set("#ph", { opacity: 0 }, 0.4);
+    tl.fromTo("#caret", { opacity: 0 }, { opacity: 1, duration: 0.01 }, 0.4);
+    tl.set("#c0", { display: "inline" }, 0.400);
+    tl.set("#c1", { display: "inline" }, 0.454);
+    tl.set("#c2", { display: "inline" }, 0.507);
+    tl.set("#c3", { display: "inline" }, 0.561);
+    tl.set("#c4", { display: "inline" }, 0.614);
+    tl.set("#c5", { display: "inline" }, 0.668);
+    tl.set("#c6", { display: "inline" }, 0.721);
+    tl.set("#c7", { display: "inline" }, 0.775);
+    tl.set("#c8", { display: "inline" }, 0.829);
+    tl.set("#c9", { display: "inline" }, 0.882);
+    tl.set("#c10", { display: "inline" }, 0.936);
+    tl.set("#c11", { display: "inline" }, 0.989);
+    tl.set("#c12", { display: "inline" }, 1.043);
+    tl.set("#c13", { display: "inline" }, 1.096);
+    tl.set("#c14", { display: "inline" }, 1.150);
+    tl.set("#c15", { display: "inline" }, 1.204);
+    tl.set("#c16", { display: "inline" }, 1.257);
+    tl.set("#c17", { display: "inline" }, 1.311);
+    tl.set("#c18", { display: "inline" }, 1.364);
+    tl.set("#c19", { display: "inline" }, 1.418);
+    tl.set("#c20", { display: "inline" }, 1.471);
+    tl.set("#c21", { display: "inline" }, 1.525);
+    tl.set("#c22", { display: "inline" }, 1.579);
+    tl.set("#c23", { display: "inline" }, 1.632);
+    tl.set("#c24", { display: "inline" }, 1.686);
+    tl.set("#c25", { display: "inline" }, 1.739);
+    tl.set("#c26", { display: "inline" }, 1.793);
+    tl.set("#c27", { display: "inline" }, 1.846);
+    // caret blinks after typing, on the beat grid
+    tl.to("#caret", { opacity: 0, duration: 0.01 }, 2.25);
+    tl.to("#caret", { opacity: 1, duration: 0.01 }, 2.5);
+    tl.to("#caret", { opacity: 0, duration: 0.01 }, 2.75);
+    tl.to("#caret", { opacity: 1, duration: 0.01 }, 3.0);
+    tl.to("#bar", { scale: 0.985, duration: 0.08, ease: "power2.out", yoyo: true, repeat: 1 }, 1.95);
+    ["#k0", "#k1", "#k2"].forEach((k, i) => tl.fromTo(k, { y: 60, opacity: 0, scale: 0.92 }, { y: 0, opacity: 1, scale: 1, duration: 0.45, ease: "back.out(1.6)" }, 2.0 + i * 0.25));
+    tl.to(["#kicker", "#title", "#bar"], { y: -36, opacity: 0, duration: 0.28, ease: "power2.in", stagger: 0.03 }, 3.62);
+    tl.to("#row", { y: 40, opacity: 0, duration: 0.3, ease: "power2.in" }, 3.66);
+    window.__timelines["ask"] = tl;
+  </script>
+  </div>
+</template>

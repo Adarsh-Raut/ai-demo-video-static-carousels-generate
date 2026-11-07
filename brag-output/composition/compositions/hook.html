@@ -1,0 +1,40 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Inter", sans-serif; color: #111827; }
+    #stage { position: absolute; inset: 0; }
+    #pill { position: absolute; left: 200px; top: 300px; display: flex; align-items: center; gap: 12px; padding: 12px 22px; border-radius: 999px;
+      background: #fff; box-shadow: 0 0 0 1px #e5e7eb, 0 6px 18px rgba(17,24,39,.06); font-size: 28px; font-weight: 500; white-space: nowrap; }
+    #pill i { width: 12px; height: 12px; border-radius: 50%; background: #16a34a; box-shadow: 0 0 0 5px rgba(22,163,74,.15); }
+    .line { position: absolute; left: 196px; font-size: 136px; font-weight: 600; letter-spacing: -.045em; line-height: 1; white-space: nowrap; }
+    #l1 { top: 400px; } #l2 { top: 552px; color: #0c4bea; }
+    .w { display: inline-block; margin-right: 34px; }
+    #city { position: absolute; left: 1080px; top: 290px; width: 760px; height: 472px;
+      -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 100%); mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 100%); }
+    #city video { width: 100%; height: 100%; object-fit: cover; }
+  </style>
+  <div id="root" data-composition-id="hook" data-width="1920" data-height="1080">
+  <div id="stage" data-layout-allow-overflow>
+    <div id="pill"><i></i>AI-powered property auctions</div>
+    <div id="l1" class="line"><span class="w" id="w1">Bid.</span><span class="w" id="w2">List.</span><span class="w" id="w3">Sell.</span></div>
+    <div id="l2" class="line"><span class="w" id="w4">All with AI.</span></div>
+    <div id="city"><video id="cityvid" class="clip" data-start="0" data-duration="4" data-track-index="2" src="assets/city.mp4" muted playsinline></video></div>
+  </div>
+  <script>
+    window.__timelines = window.__timelines || {};
+    const tl = gsap.timeline({ paused: true });
+    const pop = { y: 46, opacity: 0, filter: "blur(10px)" };
+    const to = { y: 0, opacity: 1, filter: "blur(0px)", duration: 0.32, ease: "power3.out" };
+    tl.fromTo("#pill", { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "power2.out" }, 0.05);
+    tl.fromTo("#w1", pop, to, 0.0);
+    tl.fromTo("#w2", pop, to, 0.5);
+    tl.fromTo("#w3", pop, to, 1.0);
+    tl.fromTo("#w4", { y: 60, opacity: 0, scale: 0.96, filter: "blur(14px)" }, { y: 0, opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.42, ease: "power3.out", transformOrigin: "0% 60%" }, 1.5);
+    tl.fromTo("#city", { y: 60, opacity: 0, scale: 0.94 }, { y: 0, opacity: 1, scale: 1, duration: 0.7, ease: "power3.out" }, 1.75);
+    tl.fromTo("#stage", { scale: 1 }, { scale: 1.025, duration: 4, ease: "none", transformOrigin: "40% 50%" }, 0);
+    // out: old content leaves before the next scene arrives
+    tl.to(["#pill", "#l1", "#l2"], { y: -40, opacity: 0, duration: 0.28, ease: "power2.in", stagger: 0.04 }, 3.62);
+    tl.to("#city", { y: -30, opacity: 0, duration: 0.3, ease: "power2.in" }, 3.66);
+    window.__timelines["hook"] = tl;
+  </script>
+  </div>
+</template>

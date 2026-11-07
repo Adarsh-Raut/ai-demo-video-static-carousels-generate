@@ -1,0 +1,65 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Inter", sans-serif; color: #111827; }
+    #kicker { position: absolute; left: 0; right: 0; top: 96px; text-align: center; font-size: 28px; font-weight: 600; color: #0c4bea; }
+    #title { position: absolute; left: 0; right: 0; top: 140px; text-align: center; font-size: 72px; font-weight: 600; letter-spacing: -.035em; white-space: nowrap; }
+    #title b { font-weight: 600; color: #0c4bea; }
+    #scene3d { position: absolute; left: 0; right: 0; top: 262px; height: 640px; perspective: 1700px; perspective-origin: 50% 40%; }
+    #ring { position: absolute; left: 50%; top: 40px; width: 0; height: 0; transform-style: preserve-3d; }
+    .rc { position: absolute; left: -190px; top: 0; width: 380px; height: 500px; border-radius: 20px; overflow: hidden; background: #1f2937;
+      backface-visibility: hidden; box-shadow: 0 30px 60px rgba(17,24,39,.22); }
+    .rc img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,.8) 100%); }
+    .dim { position: absolute; inset: 0; background: #f7f8fa; opacity: 0; }
+    .meta { position: absolute; left: 24px; right: 16px; bottom: 22px; color: #fff; white-space: nowrap; }
+    .city { font-size: 31px; font-weight: 600; }
+    .facts { font-size: 21px; opacity: .88; margin-top: 4px; }
+    .val { font-size: 34px; font-weight: 700; margin-top: 10px; }
+    .val small { font-size: 17px; font-weight: 500; opacity: .85; }
+    #floorglow { position: absolute; left: 460px; width: 1000px; top: 800px; height: 90px; background: radial-gradient(closest-side, rgba(12,75,234,.16), rgba(12,75,234,0)); }
+    #pager { position: absolute; left: 0; right: 0; top: 920px; text-align: center; font-size: 30px; color: #6b7280; }
+    #pager .cur { position: relative; display: inline-block; width: 40px; height: 36px; vertical-align: -6px; color: #111827; font-weight: 600; }
+    .pg { position: absolute; left: 0; top: 0; opacity: 0; }
+  </style>
+  <div id="root" data-composition-id="floor" data-width="1920" data-height="1080">
+  <div id="kicker">Upcoming auctions</div>
+  <div id="title">Step onto the <b>auction floor</b></div>
+  <div id="floorglow"></div>
+  <div id="scene3d"><div id="ring"><div class="rc" id="r0" style="transform: rotateY(0.0000deg) translateZ(600px)"><img src="assets/photos/401-rensselaer-ave-ogdensburg.jpg" alt=""><div class="shade"></div><div class="dim" id="d0"></div>
+  <div class="meta" data-layout-ignore data-layout-allow-overlap><div class="city">Ogdensburg, NY</div><div class="facts">3 bd · 1.5 ba · 2,048 sq ft</div><div class="val">$54,719 <small>est. value</small></div></div></div><div class="rc" id="r1" style="transform: rotateY(51.4286deg) translateZ(600px)"><img src="assets/photos/2529-2531-e-monument-st-baltimore.jpg" alt=""><div class="shade"></div><div class="dim" id="d1"></div>
+  <div class="meta" data-layout-ignore data-layout-allow-overlap><div class="city">Baltimore, MD</div><div class="facts">3 bd · 1 ba · 2,363 sq ft</div><div class="val">$66,111 <small>est. value</small></div></div></div><div class="rc" id="r2" style="transform: rotateY(102.8571deg) translateZ(600px)"><img src="assets/photos/703-59th-ave-capitol-heights.jpg" alt=""><div class="shade"></div><div class="dim" id="d2"></div>
+  <div class="meta" data-layout-ignore data-layout-allow-overlap><div class="city">Capitol Heights, MD</div><div class="facts">3 bd · 1 ba · 1,180 sq ft</div><div class="val">$155,118 <small>est. value</small></div></div></div><div class="rc" id="r3" style="transform: rotateY(154.2857deg) translateZ(600px)"><img src="assets/photos/18753-san-diego-blvd-lathrup-village.jpg" alt=""><div class="shade"></div><div class="dim" id="d3"></div>
+  <div class="meta" data-layout-ignore data-layout-allow-overlap><div class="city">Lathrup Village, MI</div><div class="facts">3 bd · 2 ba · 2,287 sq ft</div><div class="val">$267,234 <small>est. value</small></div></div></div><div class="rc" id="r4" style="transform: rotateY(205.7143deg) translateZ(600px)"><img src="assets/photos/1405-tamarack-ave-atwater.jpg" alt=""><div class="shade"></div><div class="dim" id="d4"></div>
+  <div class="meta" data-layout-ignore data-layout-allow-overlap><div class="city">Atwater, CA</div><div class="facts">3 bd · 2 ba · 1,386 sq ft</div><div class="val">$357,020 <small>est. value</small></div></div></div><div class="rc" id="r5" style="transform: rotateY(257.1429deg) translateZ(600px)"><img src="assets/photos/1961-nikki-ann-way-turlock.jpg" alt=""><div class="shade"></div><div class="dim" id="d5"></div>
+  <div class="meta" data-layout-ignore data-layout-allow-overlap><div class="city">Turlock, CA</div><div class="facts">4 bd · 2 ba · 2,310 sq ft</div><div class="val">$520,784 <small>est. value</small></div></div></div><div class="rc" id="r6" style="transform: rotateY(308.5714deg) translateZ(600px)"><img src="assets/photos/17895-towhee-ln-twain-harte.jpg" alt=""><div class="shade"></div><div class="dim" id="d6"></div>
+  <div class="meta" data-layout-ignore data-layout-allow-overlap><div class="city">Twain Harte, CA</div><div class="facts">3 bd · 2 ba · 864 sq ft</div><div class="val">$272,897 <small>est. value</small></div></div></div></div></div>
+  <div id="pager"><span class="cur"><span class="pg" id="p0">01</span><span class="pg" id="p1">02</span><span class="pg" id="p2">03</span><span class="pg" id="p3">04</span></span> / 12</div>
+  <script>
+    window.__timelines = window.__timelines || {};
+    const tl = gsap.timeline({ paused: true });
+    const N = 7, STEP = 51.428571;
+    const st = { a: 0 };
+    const shade = () => {
+      for (let i = 0; i < N; i++) {
+        let d = ((i * STEP + st.a) % 360 + 540) % 360 - 180; // card angle relative to front
+        const k = Math.min(1, Math.abs(d) / 110);
+        document.getElementById("d" + i).style.opacity = (k * 0.55).toFixed(3);
+      }
+      document.getElementById("ring").style.transform = `translateZ(-600px) rotateY(${st.a}deg)`;
+    };
+    tl.fromTo("#kicker", { y: 14, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, ease: "power2.out" }, 0.0);
+    tl.fromTo("#title", { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "power3.out" }, 0.05);
+    tl.fromTo("#scene3d", { y: 70, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "power3.out" }, 0.1);
+    tl.fromTo("#pager", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0.3);
+    tl.fromTo(st, { a: 24 }, { a: 0, duration: 0.8, ease: "power3.out", onUpdate: shade }, 0.0);
+    [1, 2, 3].forEach((k) => {
+      tl.to(st, { a: -k * STEP, duration: 0.6, ease: "back.out(1.3)", onUpdate: shade }, k - 0.08);
+    });
+    tl.set("#p0", { opacity: 1 }, 0);
+    [1, 2, 3].forEach((k) => { tl.set("#p" + (k - 1), { opacity: 0 }, k); tl.set("#p" + k, { opacity: 1 }, k); });
+    tl.to(["#kicker", "#title"], { y: -36, opacity: 0, duration: 0.28, ease: "power2.in", stagger: 0.03 }, 3.62);
+    tl.to(["#scene3d", "#pager", "#floorglow"], { y: 40, opacity: 0, duration: 0.3, ease: "power2.in" }, 3.66);
+    window.__timelines["floor"] = tl;
+  </script>
+  </div>
+</template>
